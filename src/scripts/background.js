@@ -160,11 +160,11 @@ window.TogglButton = {
     '</form>' +
     '</div>',
 
-  fetchUser: function (token) {
+  fetchUser: function (credentials) {
     bugsnagClient.leaveBreadcrumb('Fetching user with related data');
     return new Promise((resolve, reject) => {
-      TogglButton.ajax('/me?with_related_data=true', {
-        token: token,
+      TogglButton.ajax('/users/me', {
+        credentials: credentials,
         baseUrl: TogglButton.$ApiUrl,
         onLoad: function (xhr) {
           let resp;
@@ -173,7 +173,6 @@ window.TogglButton = {
           const clientNameMap = {};
           let projectTaskList = null;
           let entry = null;
-
           try {
             if (xhr.status === 200) {
               browser.tabs.query({ active: true, currentWindow: true })
@@ -181,6 +180,7 @@ window.TogglButton = {
                   browser.tabs.sendMessage(tabs[0].id, { type: 'sync' });
                 }));
               resp = JSON.parse(xhr.responseText);
+
               if (resp.data.projects) {
                 resp.data.projects.forEach(function (project) {
                   if (project.active && !project.server_deleted_at) {
@@ -821,22 +821,14 @@ window.TogglButton = {
     const method = opts.method || 'GET';
     const baseUrl = opts.baseUrl || TogglButton.$ApiUrl;
     const resolvedUrl = baseUrl + url;
-    const token =
-        opts.token ||
-        (TogglButton.$user && TogglButton.$user.api_token) ||
-        localStorage.getItem('userToken');
-    const credentials = opts.credentials || null;
+
+    const credentials = opts.credentials || TogglButton.getStoredCredentials();
 
     xhr.open(method, resolvedUrl, true);
     xhr.setRequestHeader('IsTogglButton', 'true');
 
     if (resolvedUrl.match(TogglButton.$ApiUrl)) {
-      if (token) {
-        xhr.setRequestHeader(
-          'Authorization',
-          'Basic ' + btoa(token + ':api_token')
-        );
-      } else if (credentials) {
+      if (credentials) {
         xhr.setRequestHeader('X-AUTH-USER', credentials.username);
         xhr.setRequestHeader('X-AUTH-TOKEN', credentials.password);
       }
@@ -1225,16 +1217,21 @@ window.TogglButton = {
     browser.browserAction.setIcon({ path: imagePath });
   },
 
-  setupToken: function (response) {
-    try {
-      const parsedResponse = JSON.parse(response);
-      const { api_token: apiToken } = parsedResponse.data;
-      localStorage.setItem('userToken', apiToken);
-    } catch (err) {
-      bugsnagClient.notify(new Error('Login token-parse failed'), {
-        metaData: { response }
-      });
-    }
+  storeCredentials: function (credentials) {
+    localStorage.setItem('username', credentials.username);
+    localStorage.setItem('password', credentials.password);
+  },
+
+  getStoredCredentials: function () {
+    return {
+      username: localStorage.getItem('username'),
+      password: localStorage.getItem('password')
+    };
+  },
+
+  removeStoredCredentials: function () {
+    localStorage.removeItem('username');
+    localStorage.setItem('password');
   },
 
   loginUser: function (request) {
@@ -1244,7 +1241,7 @@ window.TogglButton = {
         method: 'GET',
         onLoad: function (xhr) {
           if (xhr.status === 200) {
-            TogglButton.setupToken(xhr.responseText);
+            TogglButton.storeCredentials(request);
             TogglButton.fetchUser()
               .then((response) => {
                 TogglButton.refreshPage();
@@ -1286,7 +1283,7 @@ window.TogglButton = {
         onLoad: function (xhr) {
           TogglButton.$user = null;
           TogglButton.updateTriggers(null);
-          localStorage.removeItem('userToken');
+          TogglButton.removeStoredCredentials();
           resolve({ success: xhr.status === 200, xhr: xhr });
           if (xhr.status === 200) {
             TogglButton.setBrowserActionBadge();
@@ -2114,7 +2111,7 @@ window.TogglButton = {
             .then(resolve);
         } else if (request.type === 'userToken') {
           if (!TogglButton.$user) {
-            TogglButton.fetchUser(request.apiToken);
+            TogglButton.fetchUser(request.credentials);
           }
         } else if (request.type === 'currentEntry') {
           resolve({
