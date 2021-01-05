@@ -172,8 +172,8 @@ window.TogglButton = {
           const projectMap = {};
           const clientMap = {};
           const clientNameMap = {};
-          let projectTaskList = null;
-          let entry = null;
+          const projectTaskList = null;
+
           try {
             if (xhr.status === 200) {
               browser.tabs.query({ active: true, currentWindow: true })
@@ -182,60 +182,59 @@ window.TogglButton = {
                 }));
               resp = JSON.parse(xhr.responseText);
 
-              if (resp.data.projects) {
-                resp.data.projects.forEach(function (project) {
-                  if (project.active && !project.server_deleted_at) {
-                    projectMap[project.name + project.id] = project;
-                  }
-                });
-              }
-              if (resp.data.clients) {
-                resp.data.clients.forEach(function (client) {
-                  clientMap[client.id] = client;
-                  clientNameMap[client.name.toLowerCase() + client.id] = client;
-                });
-              }
-              if (resp.data.tasks) {
-                projectTaskList = {};
-                resp.data.tasks.forEach(function (task) {
-                  const pid = task.pid;
-                  if (!projectTaskList[pid]) {
-                    projectTaskList[pid] = [];
-                  }
-                  projectTaskList[pid].push(task);
-                });
-              }
-              if (resp.data.time_entries) {
-                const { time_entries: timeEntries } = resp.data;
-                entry = timeEntries.find(te => te.duration < 0) || null;
-              }
+              // if (resp.data.projects) {
+              //   resp.data.projects.forEach(function (project) {
+              //     if (project.active && !project.server_deleted_at) {
+              //       projectMap[project.name + project.id] = project;
+              //     }
+              //   });
+              // }
+              // if (resp.data.clients) {
+              //   resp.data.clients.forEach(function (client) {
+              //     clientMap[client.id] = client;
+              //     clientNameMap[client.name.toLowerCase() + client.id] = client;
+              //   });
+              // }
+              // if (resp.data.tasks) {
+              //   projectTaskList = {};
+              //   resp.data.tasks.forEach(function (task) {
+              //     const pid = task.pid;
+              //     if (!projectTaskList[pid]) {
+              //       projectTaskList[pid] = [];
+              //     }
+              //     projectTaskList[pid].push(task);
+              //   });
+              // }
+              // if (resp.data.time_entries) {
+              //   const { time_entries: timeEntries } = resp.data;
+              //   entry = timeEntries.find(te => te.duration < 0) || null;
+              // }
+              //
+              // if (TogglButton.hasWorkspaceBeenRevoked(resp.data.workspaces)) {
+              //   TogglButton.showRevokedWSView();
+              // }
 
-              if (TogglButton.hasWorkspaceBeenRevoked(resp.data.workspaces)) {
-                TogglButton.showRevokedWSView();
-              }
-
-              TogglButton.updateTriggers(entry);
-              localStorage.setItem('projects', JSON.stringify(projectMap));
-              localStorage.setItem('clients', JSON.stringify(clientMap));
-              TogglButton.$user = resp.data;
-              TogglButton.$user.time_entries = (TogglButton.$user.time_entries || [])
-                .map((te) => {
-                  // Ensure empty values from v8 become null.
-                  return {
-                    ...te,
-                    pid: te.pid || null,
-                    tid: te.tid || null
-                  };
-                });
+              // TogglButton.updateTriggers(entry);
+              // localStorage.setItem('projects', JSON.stringify(projectMap));
+              // localStorage.setItem('clients', JSON.stringify(clientMap));
+              TogglButton.$user = resp;
+              // TogglButton.$user.time_entries = (TogglButton.$user.time_entries || [])
+              //   .map((te) => {
+              //     // Ensure empty values from v8 become null.
+              //     return {
+              //       ...te,
+              //       pid: te.pid || null,
+              //       tid: te.tid || null
+              //     };
+              //   });
               TogglButton.$user.projectMap = projectMap;
               TogglButton.$user.clientMap = clientMap;
               TogglButton.$user.clientNameMap = clientNameMap;
               TogglButton.$user.projectTaskList = projectTaskList;
-              if (!TogglButton.$user.default_wid) {
-                const defaultWS = TogglButton.$user.workspaces[0];
-                TogglButton.$user.default_wid = defaultWS.id;
-              }
-              localStorage.setItem('userToken', resp.data.api_token);
+              // if (!TogglButton.$user.default_wid) {
+              //   const defaultWS = TogglButton.$user.workspaces[0];
+              //   TogglButton.$user.default_wid = defaultWS.id;
+              // }
               resolve({ success: xhr.status === 200 });
               TogglButton.setBrowserActionBadge();
               TogglButton.setupSocket();
