@@ -37,8 +37,8 @@
     "open_in_tab": true
   },
   "permissions": [
-    "*://*.toggl.com/*",
-    "*://toggl.com/*",
+    "*://*.punch-in.dfau.de/*",
+    "*://punch-in.dfau.de/*",
     "webRequest",
     "webRequestBlocking",
     "alarms",
@@ -50,7 +50,7 @@
   ],
   "optional_permissions": ["*://*/"],
   "externally_connectable": {
-    "matches": ["*://*.toggl.com/*", "*://toggl.com/*"]
+    "matches": ["*://*.punch-in.dfau.de/*", "*://punch-in.dfau.de/*"]
   },
   "content_security_policy":
     "script-src 'self'; object-src 'self';",

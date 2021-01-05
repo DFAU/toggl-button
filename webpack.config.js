@@ -17,7 +17,7 @@ const config = f => (
 ) => {
   const env = {
     development: Boolean(development),
-    bugsnagApiKey: process.env.BUTTON_BUGSNAG_API_KEY || '7419717b29de539ab0fbe35dcd7ca19d',
+    bugsnagApiKey: process.env.BUTTON_BUGSNAG_API_KEY || 'f5b5e6f9af396bcfb76f737fb043b136',
     production: Boolean(production),
     release: Boolean(release),
     version: pkg.version
@@ -72,8 +72,8 @@ module.exports = config(({ development, bugsnagApiKey, production, release, vers
   },
   plugins: [
     new EnvironmentPlugin({
-      API_URL: 'https://track.toggl.com/api',
-      TOGGL_WEB_HOST: 'https://toggl.com/track',
+      API_URL: 'https://punch-in.dfau.de/api',
+      TOGGL_WEB_HOST: 'https://punch-in.dfau.de',
       BUGSNAG_API_KEY: bugsnagApiKey,
       DEBUG: development,
       GA_TRACKING_ID: 'UA-3215787-22',

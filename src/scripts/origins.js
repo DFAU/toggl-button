@@ -577,18 +577,18 @@ export default {
     url: '*://*.todoist.com/app*',
     name: 'Todoist'
   },
-  'toggl.com': {
-    url: '*://toggl.com/*',
+  'punch-in.dfau.de': {
+    url: '*://punch-in.dfau.de/*',
     name: 'Toggl',
     clone: 'true'
   },
-  'www.toggl.com': {
-    url: '*://www.toggl.com/*',
+  'www.punch-in.dfau.de': {
+    url: '*://www.punch-in.dfau.de/*',
     name: 'Toggl',
     clone: 'true'
   },
-  'plan.toggl.com': {
-    url: '*://plan.toggl.com/*',
+  'plan.punch-in.dfau.de': {
+    url: '*://plan.punch-in.dfau.de/*',
     name: 'Toggl Plan',
     file: 'toggl-plan.js'
   },

@@ -73,7 +73,7 @@ export default class Db {
 
   async getOriginFileName (domain) {
     if (process.env.DEBUG && domain.endsWith('toggl.space')) {
-      domain = 'toggl.com';
+      domain = 'punch-in.dfau.de';
     }
     let origin = await this.getOrigin(domain);
     const origins = await this.getAllOrigins();
@@ -307,7 +307,7 @@ export default class Db {
       })
       .catch((e) => {
         bugsnagClient.notify(e);
-        alert('Failed to reset settings. Please contact support@toggl.com for assistance or try re-installing the extension.');
+        alert('Failed to reset settings. Please contact support@punch-in.dfau.de for assistance or try re-installing the extension.');
       });
   }
 

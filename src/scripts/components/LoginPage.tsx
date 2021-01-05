@@ -1,7 +1,6 @@
 import * as React from 'react';
 import { Global, css } from '@emotion/core';
 import styled from '@emotion/styled';
-import browser from 'webextension-polyfill';
 
 import bugsnagClient from '../lib/bugsnag';
 import { sendMessage } from '../lib/messaging';
@@ -51,7 +50,7 @@ async function login (setState: React.Dispatch<React.SetStateAction<LoginState>>
   });
 }
 
-export default function LoginPage ({ source, isLoggedIn, isPopup }: LoginProps) {
+export default function LoginPage ({ source, isLoggedIn}: LoginProps) {
   const [ state, setState ] = React.useState<LoginState>({ loading: false, error: null, loggedIn: isLoggedIn });
   const { loading, error, loggedIn } = state;
 
@@ -75,14 +74,20 @@ export default function LoginPage ({ source, isLoggedIn, isPopup }: LoginProps) 
   );
 
   let content = (
-    <Content>
+    <Content style={{ height: '100%' }}>
       <Row>
         <Heading>Nearly there!</Heading>
-        <Subheading>Click the button below to login to your Toggl account</Subheading>
       </Row>
       <Row>
-        <LoginButton isPopup={isPopup} />
-        <SignupButton isPopup={isPopup} />
+        <a href="login.html?source=install" style={{ marginBottom: 21 }}>
+          <Button>Try again</Button>
+        </a>
+        <Subheading>or log in directly</Subheading>
+        <LoginForm
+          onSubmit={performLogin}
+          onSuccess={onLoginSuccess}
+          onError={onLoginError}
+        />
       </Row>
     </Content>
   );
@@ -186,34 +191,13 @@ function HeaderLinks ({ loggedIn }: Pick<LoginState, 'loggedIn'>) {
         </Link>
       </li>
       <li>
-        <Link href="https://support.toggl.com/browser-extensions">
+        <Link href="https://support.punch-in.dfau.de/browser-extensions">
           User Guide
         </Link>
       </li>
     </Links>
   );
 }
-
-function LoginButton ({ isPopup }: Pick<LoginProps, 'isPopup'>) {
-  const url = `${process.env.TOGGL_WEB_HOST}/toggl-button-login/`;
-  return (
-    isPopup
-    ? <a href='#' onClick={openPage(url)}><Button>Login</Button></a>
-    : <a href={url}><Button>Login</Button></a>
-  );
-}
-
-function SignupButton ({ isPopup }: Pick<LoginProps, 'isPopup'>) {
-  const url = `${process.env.TOGGL_WEB_HOST}/signup/?utm_source=toggl-button&utm_medium=referral`;
-  const style = { marginTop: 20 };
-  return (
-    isPopup
-    ? <Link style={style} href='#' onClick={openPage(url)}>Create account</Link>
-    : <Link style={style} href={url}>Create account</Link>
-  );
-}
-
-const openPage = (url: string) => () => browser.tabs.create({ url });
 
 const performLogin = (username: string, password: string) => (
   sendMessage({ type: 'login', username, password })

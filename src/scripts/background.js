@@ -4,7 +4,6 @@ import bugsnagClient from './lib/bugsnag';
 import { escapeHtml, isTogglURL, report, secToHHMM } from './lib/utils';
 import { renderTimeEntries } from './lib/actions';
 import Db from './lib/db';
-import Ga from './lib/ga';
 import Sound from './lib/sound';
 /* eslint-disable-next-line import/no-webpack-loader-syntax */
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
@@ -67,8 +66,6 @@ window.TogglButton = {
   $curEntry: null,
   $latestStoppedEntry: null,
   $ApiUrl: process.env.API_URL,
-  $ApiV8Url: `${process.env.API_URL}/v8`,
-  $ApiV9Url: `${process.env.API_URL}/v9`,
   $sendResponse: null,
   websocket: {
     socket: null,
@@ -168,7 +165,7 @@ window.TogglButton = {
     return new Promise((resolve, reject) => {
       TogglButton.ajax('/me?with_related_data=true', {
         token: token,
-        baseUrl: TogglButton.$ApiV8Url,
+        baseUrl: TogglButton.$ApiUrl,
         onLoad: function (xhr) {
           let resp;
           const projectMap = {};
@@ -314,7 +311,7 @@ window.TogglButton = {
     }
 
     try {
-      TogglButton.websocket.socket = new WebSocket('wss://stream.toggl.com/ws');
+      TogglButton.websocket.socket = new WebSocket('wss://stream.punch-in.dfau.de/ws');
     } catch (error) {
       bugsnagClient.notify(error, { context: 'websocket' });
       TogglButton.retryWebsocketConnection();
@@ -635,7 +632,7 @@ window.TogglButton = {
       TogglButton.ajax('/time_entries', {
         method: 'POST',
         payload: entry,
-        baseUrl: TogglButton.$ApiV9Url,
+        baseUrl: TogglButton.$ApiUrl,
         onLoad: async function (xhr) {
           const hasTasks =
             !!TogglButton.$user && !!TogglButton.$user.projectTaskList;
@@ -822,7 +819,7 @@ window.TogglButton = {
   ajax: function (url, opts) {
     const xhr = new XMLHttpRequest();
     const method = opts.method || 'GET';
-    const baseUrl = opts.baseUrl || TogglButton.$ApiV8Url;
+    const baseUrl = opts.baseUrl || TogglButton.$ApiUrl;
     const resolvedUrl = baseUrl + url;
     const token =
         opts.token ||
@@ -840,10 +837,8 @@ window.TogglButton = {
           'Basic ' + btoa(token + ':api_token')
         );
       } else if (credentials) {
-        xhr.setRequestHeader(
-          'Authorization',
-          'Basic ' + btoa(credentials.username + ':' + credentials.password)
-        );
+        xhr.setRequestHeader('X-AUTH-USER', credentials.username);
+        xhr.setRequestHeader('X-AUTH-TOKEN', credentials.password);
       }
     }
 
@@ -896,7 +891,7 @@ window.TogglButton = {
         {
           method: 'PUT',
           payload: entry,
-          baseUrl: TogglButton.$ApiV9Url,
+          baseUrl: TogglButton.$ApiUrl,
           onLoad: function (xhr) {
             if (xhr.status === 200) {
               TogglButton.$latestStoppedEntry = JSON.parse(xhr.responseText);
@@ -943,7 +938,7 @@ window.TogglButton = {
         `/time_entries/${TogglButton.$curEntry.id}`,
         {
           method: 'PUT',
-          baseUrl: TogglButton.$ApiV9Url,
+          baseUrl: TogglButton.$ApiUrl,
           payload: entry,
           onLoad: function (xhr) {
             if (xhr.status === 200) {
@@ -1108,7 +1103,7 @@ window.TogglButton = {
         {
           method: 'PUT',
           payload: entry,
-          baseUrl: TogglButton.$ApiV9Url,
+          baseUrl: TogglButton.$ApiUrl,
           onLoad: function (xhr) {
             const success = xhr.status === 200;
             try {
@@ -1158,7 +1153,7 @@ window.TogglButton = {
         `/time_entries/${timeEntry.id}`,
         {
           method: 'DELETE',
-          baseUrl: TogglButton.$ApiV9Url,
+          baseUrl: TogglButton.$ApiUrl,
           onLoad: function (xhr) {
             const success = xhr.status === 200;
             if (success) {
@@ -1245,8 +1240,8 @@ window.TogglButton = {
   loginUser: function (request) {
     let error;
     return new Promise((resolve, reject) => {
-      TogglButton.ajax('/sessions', {
-        method: 'POST',
+      TogglButton.ajax('/ping', {
+        method: 'GET',
         onLoad: function (xhr) {
           if (xhr.status === 200) {
             TogglButton.setupToken(xhr.responseText);
@@ -1257,6 +1252,7 @@ window.TogglButton = {
               })
               .catch(reject);
           } else {
+            alert(xhr.status + '' + xhr.responseText);
             if (xhr.status === 403) {
               error = 'Wrong Email or Password!';
             }
@@ -1632,7 +1628,7 @@ window.TogglButton = {
   },
 
   checkActivity: async function (currentState) {
-    let secondTitle = 'Open toggl.com';
+    let secondTitle = 'Open punch-in.dfau.de';
     let options;
 
     clearTimeout(TogglButton.$nannyTimer);
@@ -1761,7 +1757,7 @@ window.TogglButton = {
           TogglButton.createTimeEntry(timeEntry, null);
           buttonName = 'continue';
         } else {
-          browser.tabs.create({ url: 'https://toggl.com/app/' });
+          browser.tabs.create({ url: 'https://punch-in.dfau.de/app/' });
           buttonName = 'go_to_web';
         }
       }
@@ -2303,7 +2299,7 @@ window.TogglButton = {
 
     TogglButton.ajax('', {
       method: 'POST',
-      baseUrl: TogglButton.$ApiV9Url,
+      baseUrl: TogglButton.$ApiUrl,
       payload,
       onLoad: xhr => {
         sendResponse({ type: 'create-workspace', success: xhr.status === 200 });
@@ -2360,7 +2356,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 );
 
 window.db = new Db(TogglButton);
-window.ga = new Ga(db);
+console.log('do something....');
 
 TogglButton.queue.push(TogglButton.startAutomatically);
 db.get('showRightClickButton')

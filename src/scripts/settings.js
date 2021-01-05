@@ -429,7 +429,7 @@ const Settings = {
                 html.appendChild(option);
               }
 
-              // Don't show toggl.com as it's not optional
+              // Don't show punch-in.dfau.de as it's not optional
               if (isNotTogglApp(key) && !!TogglOrigins[key].url) {
                 li = document.createElement('li');
                 li.id = key;
