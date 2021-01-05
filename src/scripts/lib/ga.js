@@ -18,25 +18,8 @@ export default class Ga {
   }
 
   report (event, service) {
-    this.db.get('sendUsageStatistics')
-      .then((sendUsageStatistics) => {
-        if (sendUsageStatistics) {
-          const request = new XMLHttpRequest();
-          const message =
-            'v=1&tid=' +
-            process.env.GA_TRACKING_ID +
-            '&cid=' +
-            clientId +
-            '&aip=1' +
-            '&ds=extension&t=event&ec=' +
-            event +
-            '&ea=' +
-            service;
+    // removed ga logging
 
-          request.open('POST', 'https://www.google-analytics.com/collect', true);
-          request.send(message);
-        }
-      });
   }
 
   reportEvent (event, service) {

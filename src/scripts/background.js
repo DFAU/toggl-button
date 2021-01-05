@@ -4,6 +4,7 @@ import bugsnagClient from './lib/bugsnag';
 import { escapeHtml, isTogglURL, report, secToHHMM } from './lib/utils';
 import { renderTimeEntries } from './lib/actions';
 import Db from './lib/db';
+import Ga from './lib/ga';
 import Sound from './lib/sound';
 /* eslint-disable-next-line import/no-webpack-loader-syntax */
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
@@ -2353,7 +2354,7 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 );
 
 window.db = new Db(TogglButton);
-console.log('do something....');
+window.ga = new Ga(db);
 
 TogglButton.queue.push(TogglButton.startAutomatically);
 db.get('showRightClickButton')
