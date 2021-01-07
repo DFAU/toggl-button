@@ -203,6 +203,8 @@ window.TogglButton = {
               TogglButton.fetchData('/activities').then(
                 (tasks) => {
                   tasks.forEach(function (task) {
+                    // workaround due to missing workspaces
+                    task.wid = 0;
                     const pid = task.project;
                     if (!projectTaskList[pid]) {
                       projectTaskList[pid] = [];
@@ -217,6 +219,11 @@ window.TogglButton = {
               TogglButton.fetchData('/timesheets').then(
                 (timesheets) => {
                   entry = timesheets.find(te => te.duration === 0) || null;
+                  timesheets.forEach(function (timesheet) {
+                    // workaround due to missing workspaces
+                    timesheet.wid = 0;
+                  });
+
                   TogglButton.$user.time_entries = timesheets;
                   TogglButton.updateTriggers(entry);
                 }
@@ -625,7 +632,7 @@ window.TogglButton = {
   },
 
   checkPomodoroAlarm: function (entry) {
-    const duration = new Date() - new Date(entry.start);
+    const duration = new Date() - new Date(entry.begin);
     TogglButton.triggerPomodoroAlarm(duration);
   },
 
@@ -1016,11 +1023,11 @@ window.TogglButton = {
         entry.wid = project && project.wid;
       }
 
-      if (timeEntry.start) {
-        entry.start = timeEntry.start;
+      if (timeEntry.begin) {
+        entry.begin = timeEntry.begin;
       }
       if (!isRunningEntry) {
-        entry.stop = timeEntry.stop;
+        entry.end = timeEntry.end;
       }
 
       if (timeEntry.duration) {
@@ -1639,7 +1646,7 @@ window.TogglButton = {
     if (!TogglButton.$curEntry) {
       return false;
     }
-    const startedTime = new Date(TogglButton.$curEntry.start);
+    const startedTime = new Date(TogglButton.$curEntry.begin);
     const now = new Date();
     const endTime = new Date();
     const dayEndTime = await db.get('dayEndTime');

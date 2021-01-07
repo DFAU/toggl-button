@@ -251,7 +251,7 @@ const Popup = {
       return;
     }
 
-    const duration = formatDuration(TogglButton.$curEntry.start);
+    const duration = formatDuration(TogglButton.$curEntry.begin);
     const durationField = document.querySelector('#toggl-button-duration');
 
     // Update edit form duration field
@@ -364,14 +364,14 @@ const Popup = {
 
     if (duration) {
       if (startTime && stopTime) {
-        request.start = new Date(startTime).toISOString();
+        request.begin = new Date(startTime).toISOString();
         request.duration = duration;
         request.stop = addSeconds(new Date(startTime), duration).toISOString();
       } else {
         const start = new Date(
           (new Date()).getTime() - duration * 1000
         );
-        request.start = start.toISOString();
+        request.begin = start.toISOString();
         request.duration = -1 * Math.floor(start.getTime() / 1000);
       }
     }

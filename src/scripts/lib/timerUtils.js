@@ -20,14 +20,14 @@ const HUMAN_DURATION_REGEX = /^\s*((\d+(?:\.|,)?\d*|\d*(?:\.|,)?\d+)\s*(((m|min|
 export function getStopDate (timeEntry) {
   return (
     timeEntry.stop ||
-    moment(timeEntry.start)
+    moment(timeEntry.begin)
       .add(getDuration(timeEntry), 'seconds')
       .format()
   );
 }
 
 export function getStartDateSeconds (timeEntry) {
-  return moment(timeEntry.start).unix();
+  return moment(timeEntry.begin).unix();
 }
 /**
  * Returns stop date of given time entry as a unix timestamp (seconds)
@@ -50,7 +50,7 @@ export function getDuration (timeEntry) {
   if (timeEntry.duronly) {
     return moment().unix() + timeEntry.duration;
   }
-  return moment().diff(timeEntry.start, 'seconds');
+  return moment().diff(timeEntry.begin, 'seconds');
 }
 
 /**
@@ -90,7 +90,7 @@ export function getGroupStartDate (timeEntries) {
   const firstTE = _(timeEntries.slice())
     .sortBy(getStartDateSeconds)
     .head();
-  return firstTE.start;
+  return firstTE.begin;
 }
 
 /**
