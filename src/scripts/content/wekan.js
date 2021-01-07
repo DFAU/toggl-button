@@ -11,8 +11,7 @@ togglbutton.render(
     const togglLink = togglbutton.createTimerLink({
       className: 'wekan-toggle-btn',
       description: descriptionSelector,
-      projectName: projectSelector,
-      buttonType: 'minimal'
+      projectName: projectSelector
     });
 
     // Append the button to the ticket controls
