@@ -793,6 +793,7 @@ window.TogglButton = {
     if (opts.mime) {
       xhr.overrideMimeType('application/json');
     }
+    xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify(opts.payload));
   },
 
@@ -992,42 +993,38 @@ window.TogglButton = {
   updateTimeEntry: function (timeEntry, sendResponse) {
     let entry;
     let error = '';
-    let project;
     const isRunningEntry = TogglButton.$curEntry && TogglButton.$curEntry.id === timeEntry.id;
 
     return new Promise(function (resolve, reject) {
       entry = {
         description: timeEntry.description,
-        pid: timeEntry.pid || null,
-        tags: timeEntry.tags,
-        tid: timeEntry.tid || null,
-        billable: timeEntry.billable,
-        wid: timeEntry.wid || TogglButton.$curEntry.wid
+        tags: timeEntry.tags.join(',')
       };
-      if (timeEntry.id) {
-        entry.id = timeEntry.id;
-      } else {
-        entry.id = TogglButton.$curEntry.id;
+
+      const timeEntryId = timeEntry.id ? timeEntry.id : TogglButton.$curEntry.id;
+
+      if (timeEntry.project) {
+        entry.project = timeEntry.project;
       }
 
-      if (entry.pid) {
-        project = TogglButton.findProjectByPid(parseInt(entry.pid, 10));
-        entry.wid = project && project.wid;
+      if (timeEntry.activity) {
+        entry.activity = timeEntry.activity;
       }
 
       if (timeEntry.begin) {
         entry.begin = timeEntry.begin;
       }
+
       if (!isRunningEntry) {
         entry.end = timeEntry.end;
       }
 
-      if (timeEntry.duration) {
+      if (timeEntry.duration > 0) {
         entry.duration = timeEntry.duration;
       }
 
       TogglButton.ajax(
-        `/timesheets/${entry.id}`,
+        `/timesheets/${timeEntryId}`,
         {
           method: 'PATCH',
           payload: entry,
