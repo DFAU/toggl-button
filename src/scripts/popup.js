@@ -341,10 +341,9 @@ const Popup = {
     const request = {
       type: 'update',
       description: document.querySelector('#toggl-button-description').value,
-      pid: selected.pid,
-      projectName: selected.name,
+      project: selected.project,
       tags: PopUp.$tagAutocomplete.getSelected(),
-      tid: selected.tid,
+      activity: selected.activity,
       respond: true,
       billable: billable,
       service: 'dropdown'
@@ -366,7 +365,7 @@ const Popup = {
       if (startTime && stopTime) {
         request.begin = new Date(startTime).toISOString();
         request.duration = duration;
-        request.stop = addSeconds(new Date(startTime), duration).toISOString();
+        request.end = addSeconds(new Date(startTime), duration).toISOString();
       } else {
         const start = new Date(
           (new Date()).getTime() - duration * 1000
