@@ -1832,7 +1832,9 @@ window.TogglButton = {
     today.setHours(0, 0, 0, 0);
 
     const getWeekStart = function (d) {
-      const startDay = TogglButton.$user.beginning_of_week;
+      const startDay = TogglButton.$user.beginning_of_week
+        ? TogglButton.$user.beginning_of_week
+        : 0;
 
       const day = d.getDay();
 
@@ -1845,18 +1847,18 @@ window.TogglButton = {
 
     timeEntries.forEach(function (entry) {
       // Calc today total
-      if (new Date(entry.start).getTime() > today.getTime()) {
+      if (new Date(entry.begin).getTime() > today.getTime()) {
         if (entry.duration < 0) {
-          todaySum += (new Date() - new Date(entry.start)) / 1000;
+          todaySum += (new Date() - new Date(entry.begin)) / 1000;
         } else {
           todaySum += entry.duration;
         }
       }
 
       // Calc week total
-      if (new Date(entry.start).getTime() > weekStart.getTime()) {
+      if (new Date(entry.begin).getTime() > weekStart.getTime()) {
         if (entry.duration < 0) {
-          weekSum += (new Date() - new Date(entry.start)) / 1000;
+          weekSum += (new Date() - new Date(entry.begin)) / 1000;
         } else {
           weekSum += entry.duration;
         }
