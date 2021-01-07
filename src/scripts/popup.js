@@ -101,7 +101,7 @@ const Popup = {
   renderTimer: function () {
     const rootElement = document.getElementById('root-timer');
     const entry = TogglButton.$curEntry;
-    const project = entry && TogglButton.findProjectByPid(entry.pid) || null;
+    const project = entry && TogglButton.findProjectByPid(entry.project) || null;
     ReactDOM.render(<Timer entry={entry} project={project} />, rootElement);
   },
 
@@ -172,7 +172,7 @@ const Popup = {
       ReactDOM.render(<Pomodoro entry={TogglButton.$curEntry} interval={TogglButton.pomodoroInterval} />, document.getElementById('root-time-entries-list'));
       return;
     }
-    const entries = TogglButton.$user.timesheets;
+    const entries = TogglButton.$user.time_entries;
     if (!entries || entries.length < 1) {
       ReactDOM.render(<TimeEntriesList />, document.getElementById('root-time-entries-list'));
       return;
@@ -203,7 +203,7 @@ const Popup = {
    * @param timeEntry {Toggl.TimeEntry} - The time entry object to render
    */
   renderEditForm: function (timeEntry) {
-    const pid = timeEntry.pid || 0;
+    const pid = timeEntry.project || 0;
     const tid = timeEntry.tid || 0;
     const wid = timeEntry.wid;
     const togglButtonDescription = document.querySelector(
@@ -216,13 +216,13 @@ const Popup = {
     if (timeEntry.id && editView) {
       editView.dataset.timeEntryId = timeEntry.id;
       editView.dataset.workspaceId = timeEntry.wid;
-      editView.dataset.startTime = timeEntry.start;
-      editView.dataset.stopTime = timeEntry.stop || '';
+      editView.dataset.startTime = timeEntry.begin;
+      editView.dataset.stopTime = timeEntry.end || '';
     }
 
     const duration = differenceInSeconds(
-      new Date(isCurrentEntry ? undefined : timeEntry.stop),
-      new Date(timeEntry.start)
+      new Date(isCurrentEntry ? undefined : timeEntry.end),
+      new Date(timeEntry.begin)
     );
     togglButtonDescription.value = timeEntry.description || '';
     togglButtonDuration.value = secToHhmmImproved(duration, { html: false });
@@ -589,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       e.stopPropagation();
       const id = e.target.dataset.continueId;
-      const timeEntry = TogglButton.$user.timesheets.find((entry) => entry.id === +id);
+      const timeEntry = TogglButton.$user.time_entries.find((entry) => entry.id === +id);
 
       const request = {
         type: 'list-continue',

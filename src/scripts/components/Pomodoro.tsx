@@ -31,7 +31,7 @@ interface PomodoroProps {
   interval: number;
 }
 export default function Pomodoro(props: PomodoroProps) {
-  const countdown = useCountdown(props.entry.start, props.interval);
+  const countdown = useCountdown(props.entry.begin, props.interval);
   const strokeDashoffset = (countdown / (props.interval * 60)) * 892;
 
   return (

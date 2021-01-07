@@ -29,13 +29,13 @@ const getTimeEntryDayGroups = (timeEntries: Array<Array<Toggl.TimeEntry>>): {[da
   return [...timeEntries]
     .sort((a, b) => {
       // Most recent entries first.
-      if (a[0].start > b[0].start) return -1;
-      if (b[0].start > a[0].start) return 1;
+      if (a[0].begin > b[0].begin) return -1;
+      if (b[0].begin > a[0].begin) return 1;
       return 0;
     })
     .filter((timeEntries) => timeEntries.some((te) => te.duration >= 0))
     .reduce((groups: { [date: string]: Array<Array<Toggl.TimeEntry>> }, entries) => {
-      const date = format(entries[0].start, 'YYYY-MM-DD');
+      const date = format(entries[0].begin, 'YYYY-MM-DD');
       groups[date] = groups[date] || [];
       groups[date].push(entries);
 
@@ -88,7 +88,7 @@ export default function TimeEntriesList (props: TimeEntriesListProps) {
                 {groupDuration(groupEntries)}</span>
               </EntryHeading>
               {groupEntries.map((timeEntries, i) => {
-                const project = timeEntries[0].pid && projects[timeEntries[0].pid] || null;
+                const project = timeEntries[0].project && projects[timeEntries[0].project] || null;
                 return <TimeEntriesListItem key={`te-${idx}-${i}`} timeEntries={timeEntries} project={project} />;
               })}
             </EntryDayGroup>
@@ -114,7 +114,7 @@ function TimeEntriesListItem ({ timeEntries, project }: TimeEntriesListItemProps
     return sum;
   }, 0);
   const entriesCount = timeEntries.length;
-  const earliestStartTime = format(timeEntries[timeEntries.length - 1].start, 'HH:mm');
+  const earliestStartTime = format(timeEntries[timeEntries.length - 1].begin, 'HH:mm');
   const isGrouped = entriesCount > 1 && isGroupCollapsed;
   const toggleGrouping = React.useCallback(
     () => setGroupCollapsed(val => !val),

@@ -55,15 +55,15 @@ declare module Toggl {
     id: number;
     wid: number;
     billable: boolean;
-    start: string;
-    stop: string;
+    begin: string;
+    end: string;
     duration: number;
     description: string;
     duronly: boolean;
     at: string;
     uid: number;
     tags: string[] | null;
-    pid?: number;
+    project?: number;
     tid?: number;
   }
   export interface CSVUpload {

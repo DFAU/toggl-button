@@ -2,13 +2,13 @@ import browser from 'webextension-polyfill';
 import { isSameDay } from 'date-fns';
 
 const getProject = (entry: Toggl.TimeEntry) => {
-  return browser.extension.getBackgroundPage().TogglButton.findProjectByPid(entry.pid);
+  return browser.extension.getBackgroundPage().TogglButton.findProjectByPid(entry.project);
 }
 
 const hasExistingGroup = (entry: Toggl.TimeEntry) => ([te]: Toggl.TimeEntry[]) => {
-  return isSameDay(te.start, entry.start) &&
+  return isSameDay(te.begin, entry.begin) &&
     te.description === entry.description &&
-    te.pid === entry.pid &&
+    te.project === entry.project &&
     te.tid === entry.tid &&
     te.wid === entry.wid &&
     (te.tags || []).join(',') === (entry.tags || []).join(',') &&
@@ -31,8 +31,8 @@ export const groupTimeEntriesByDay = (timeEntries: Toggl.TimeEntry[]) => {
       sum.listEntries[existingGroupIndex].push(entry);
       sum.listEntries[existingGroupIndex].sort((a, b) => {
         // Most recent entries first.
-        if (a.start > b.start) return -1;
-        if (b.start > a.start) return 1;
+        if (a.begin > b.begin) return -1;
+        if (b.begin > a.begin) return 1;
         return 0;
       });
     }

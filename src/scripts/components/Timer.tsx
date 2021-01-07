@@ -44,7 +44,7 @@ function RunningTimer(props: { entry: Toggl.TimeEntry, project: Toggl.Project | 
       </RunningTimerDescription>
       <div>
         {tags && <TagsIcon title={tags} />}
-        <TimerDuration start={entry.start} />
+        <TimerDuration start={entry.begin} />
         <TimerButton isRunning onClick={stopTimer} />
       </div>
     </TimerContainer>
