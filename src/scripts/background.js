@@ -864,19 +864,11 @@ window.TogglButton = {
         return;
       }
 
-      const stopTime = timeEntry.stopDate || new Date();
-      const startTime = new Date(-TogglButton.$curEntry.duration * 1000);
-      const entry = {
-        stop: stopTime.toISOString(),
-        duration: Math.floor((stopTime - startTime) / 1000)
-      };
-
       TogglButton.ajax(
-        `/timesheets/${TogglButton.$curEntry.id}`,
+        `/timesheets/${TogglButton.$curEntry.id}/stop`,
         {
-          method: 'PUT',
+          method: 'PATCH',
           baseUrl: TogglButton.$ApiUrl,
-          payload: entry,
           onLoad: function (xhr) {
             if (xhr.status === 200) {
               TogglButton.$latestStoppedEntry = JSON.parse(xhr.responseText);
