@@ -261,7 +261,7 @@ export function TimeEntryProject ({ project }: { project: Toggl.Project | null }
   return (
     <div style={{ overflow: 'hidden' }}>
       {project ?
-        <ProjectLargeDot color={project.hex_color}>
+        <ProjectLargeDot color={project.color}>
           <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {project.name}
           </span>

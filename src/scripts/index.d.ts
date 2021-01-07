@@ -15,7 +15,7 @@ interface Process {
 
 type Project = {
   id: number;
-  hex_color: string;
+  color: string;
   name: string;
 };
 
@@ -33,7 +33,7 @@ declare module Toggl {
   export interface Project {
     id: number;
     wid: number;
-    cid: number;
+    customer: number;
     name: string;
     billable: boolean;
     is_private: boolean;
@@ -46,7 +46,7 @@ declare module Toggl {
     actual_hours: number;
     rate: number;
     currency: string;
-    hex_color: string;
+    color: string;
     server_deleted_at?: string;
     estimated_hours?: number;
     guid?: string;

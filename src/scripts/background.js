@@ -165,11 +165,19 @@ window.TogglButton = {
                 }));
               resp = JSON.parse(xhr.responseText);
               TogglButton.$user = resp;
+              // workaround due to missing workspaces
+              TogglButton.$user.default_wid = 0;
+              TogglButton.$user.workspaces = [{
+                id: 0,
+                name: 'default'
+              }];
 
               TogglButton.fetchData('/projects').then(
                 (projects) => {
                   projects.forEach(function (project) {
                     if (project.visible) {
+                      // workaround due to missing workspaces
+                      project.wid = 0;
                       projectMap[project.name + project.id] = project;
                     }
                   });
@@ -181,6 +189,8 @@ window.TogglButton = {
               TogglButton.fetchData('/customers').then(
                 (clients) => {
                   clients.forEach(function (client) {
+                    // workaround due to missing workspaces
+                    client.wid = 0;
                     clientMap[client.id] = client;
                     clientNameMap[client.name.toLowerCase() + client.id] = client;
                   });
@@ -751,7 +761,7 @@ window.TogglButton = {
 
     const credentials = opts.credentials || TogglButton.getStoredCredentials();
 
-    alert('execute xhr request... for ' + resolvedUrl);
+    console.log('execute xhr request... for ' + resolvedUrl);
 
     xhr.open(method, resolvedUrl, true);
     xhr.setRequestHeader('IsTogglButton', 'true');
@@ -1174,7 +1184,6 @@ window.TogglButton = {
               })
               .catch(reject);
           } else {
-            alert(xhr.status + '' + xhr.responseText);
             if (xhr.status === 403) {
               error = 'Wrong Email or Password!';
             }
@@ -1288,8 +1297,8 @@ window.TogglButton = {
         if (projects.hasOwnProperty(key)) {
           project = projects[key];
           clientName =
-            !!project.cid && !!clients[project.cid]
-              ? clients[project.cid].name + project.cid
+            !!project.customer && !!clients[project.customer]
+              ? clients[project.customer].name + project.customer
               : 0;
           wsHtml[project.wid][clientName] += TogglButton.generateProjectItem(
             project
@@ -1314,7 +1323,6 @@ window.TogglButton = {
     } catch (e) {
       report(e);
     }
-
     return html;
   },
 
@@ -1331,7 +1339,7 @@ window.TogglButton = {
         '" data-pid="' +
         project.id +
         '"><span class="tb-project-bullet tb-project-color" style="color: ' +
-        project.hex_color +
+        project.color +
         '">' +
         '<span class="item-name ' +
         hasTasks +
