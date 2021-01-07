@@ -643,6 +643,10 @@ export default {
     url: '*://waffle.io/*',
     name: 'Waffle'
   },
+  'wekan.io': {
+    url: '*://wekan.io/*',
+    name: 'Wekan'
+  },
   'wordpress.com': {
     url: '*://wordpress.com/*',
     name: 'Wordpress'
