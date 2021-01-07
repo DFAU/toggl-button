@@ -172,7 +172,7 @@ const Popup = {
       ReactDOM.render(<Pomodoro entry={TogglButton.$curEntry} interval={TogglButton.pomodoroInterval} />, document.getElementById('root-time-entries-list'));
       return;
     }
-    const entries = TogglButton.$user.time_entries;
+    const entries = TogglButton.$user.timesheets;
     if (!entries || entries.length < 1) {
       ReactDOM.render(<TimeEntriesList />, document.getElementById('root-time-entries-list'));
       return;
@@ -589,7 +589,7 @@ document.addEventListener('DOMContentLoaded', function () {
       }
       e.stopPropagation();
       const id = e.target.dataset.continueId;
-      const timeEntry = TogglButton.$user.time_entries.find((entry) => entry.id === +id);
+      const timeEntry = TogglButton.$user.timesheets.find((entry) => entry.id === +id);
 
       const request = {
         type: 'list-continue',

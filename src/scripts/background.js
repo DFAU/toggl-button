@@ -10,8 +10,6 @@ import Sound from './lib/sound';
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
 
 const FIVE_MINUTES = 5 * 60;
-const ONE_HOUR = 60 * 60;
-const RETRY_INTERVAL = 15;
 
 let openWindowsCount = 0;
 
@@ -23,22 +21,6 @@ const shouldTriggerNotification = (state, seconds) => {
     state === 'idle' && seconds > 0 && (seconds % FIVE_MINUTES) === 0
   );
 };
-
-function randomInt (min, max) {
-  return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function jitter () {
-  // Random duration between 0-60 seconds
-  return randomInt(0, 60);
-}
-
-function backoff (retryCount) {
-  return Math.min(
-    (RETRY_INTERVAL * Math.pow(2, retryCount)) + jitter(),
-    ONE_HOUR
-  );
-}
 
 /**
  * Returns true if the user is active or idle state
@@ -169,10 +151,11 @@ window.TogglButton = {
         baseUrl: TogglButton.$ApiUrl,
         onLoad: function (xhr) {
           let resp;
-          const projectMap = {};
           const clientMap = {};
           const clientNameMap = {};
           const projectTaskList = null;
+          const projectMap = {};
+          let entry = null;
 
           try {
             if (xhr.status === 200) {
@@ -181,67 +164,59 @@ window.TogglButton = {
                   browser.tabs.sendMessage(tabs[0].id, { type: 'sync' });
                 }));
               resp = JSON.parse(xhr.responseText);
-
-              // if (resp.data.projects) {
-              //   resp.data.projects.forEach(function (project) {
-              //     if (project.active && !project.server_deleted_at) {
-              //       projectMap[project.name + project.id] = project;
-              //     }
-              //   });
-              // }
-              // if (resp.data.clients) {
-              //   resp.data.clients.forEach(function (client) {
-              //     clientMap[client.id] = client;
-              //     clientNameMap[client.name.toLowerCase() + client.id] = client;
-              //   });
-              // }
-              // if (resp.data.tasks) {
-              //   projectTaskList = {};
-              //   resp.data.tasks.forEach(function (task) {
-              //     const pid = task.pid;
-              //     if (!projectTaskList[pid]) {
-              //       projectTaskList[pid] = [];
-              //     }
-              //     projectTaskList[pid].push(task);
-              //   });
-              // }
-              // if (resp.data.time_entries) {
-              //   const { time_entries: timeEntries } = resp.data;
-              //   entry = timeEntries.find(te => te.duration < 0) || null;
-              // }
-              //
-              // if (TogglButton.hasWorkspaceBeenRevoked(resp.data.workspaces)) {
-              //   TogglButton.showRevokedWSView();
-              // }
-
-              // TogglButton.updateTriggers(entry);
-              // localStorage.setItem('projects', JSON.stringify(projectMap));
-              // localStorage.setItem('clients', JSON.stringify(clientMap));
               TogglButton.$user = resp;
-              // TogglButton.$user.time_entries = (TogglButton.$user.time_entries || [])
-              //   .map((te) => {
-              //     // Ensure empty values from v8 become null.
-              //     return {
-              //       ...te,
-              //       pid: te.pid || null,
-              //       tid: te.tid || null
-              //     };
-              //   });
-              TogglButton.$user.projectMap = projectMap;
-              TogglButton.$user.clientMap = clientMap;
-              TogglButton.$user.clientNameMap = clientNameMap;
-              TogglButton.$user.projectTaskList = projectTaskList;
-              // if (!TogglButton.$user.default_wid) {
-              //   const defaultWS = TogglButton.$user.workspaces[0];
-              //   TogglButton.$user.default_wid = defaultWS.id;
-              // }
+
+              TogglButton.fetchData('/projects').then(
+                (projects) => {
+                  projects.forEach(function (project) {
+                    if (project.visible) {
+                      projectMap[project.name + project.id] = project;
+                    }
+                  });
+                  TogglButton.$user.projectMap = projectMap;
+                  localStorage.setItem('projects', JSON.stringify(projectMap));
+                }
+              );
+
+              TogglButton.fetchData('/customers').then(
+                (clients) => {
+                  clients.forEach(function (client) {
+                    clientMap[client.id] = client;
+                    clientNameMap[client.name.toLowerCase() + client.id] = client;
+                  });
+                  TogglButton.$user.clientMap = clientMap;
+                  TogglButton.$user.clientNameMap = clientNameMap;
+                  localStorage.setItem('clients', JSON.stringify(clientMap));
+                }
+              );
+
+              TogglButton.fetchData('/activities').then(
+                (tasks) => {
+                  tasks.forEach(function (task) {
+                    const pid = task.project;
+                    if (!projectTaskList[pid]) {
+                      projectTaskList[pid] = [];
+                    }
+                    projectTaskList[pid].push(task);
+                  });
+
+                  TogglButton.$user.projectTaskList = projectTaskList;
+                }
+              );
+
+              TogglButton.fetchData('/timesheets').then(
+                (timesheets) => {
+                  entry = timesheets.find(te => te.duration === 0) || null;
+                  TogglButton.$user.time_entries = timesheets;
+                  TogglButton.updateTriggers(entry);
+                }
+              );
+
               resolve({ success: xhr.status === 200 });
               TogglButton.setBrowserActionBadge();
-              TogglButton.setupSocket();
               TogglButton.updateBugsnag();
               TogglButton.handleQueue();
               TogglButton.setCanSeeBillable();
-              ga.reportOs();
             } else {
               bugsnagClient.notify(new Error(`Fetch user failed ${xhr.status}`), {
                 metaData: {
@@ -265,6 +240,45 @@ window.TogglButton = {
           resolve({
             success: false,
             type: 'login',
+            error: 'Connectivity error'
+          });
+        }
+      });
+    });
+  },
+
+  fetchData: function (url) {
+    bugsnagClient.leaveBreadcrumb('Fetching Data');
+    return new Promise((resolve, reject) => {
+      TogglButton.ajax(url, {
+        baseUrl: TogglButton.$ApiUrl,
+        onLoad: function (xhr) {
+          try {
+            if (xhr.status === 200) {
+              resolve(JSON.parse(xhr.responseText));
+            } else {
+              bugsnagClient.notify(new Error(`Fetch data failed ${xhr.status}`), {
+                metaData: {
+                  status: xhr.status,
+                  responseText: xhr.responseText
+                }
+              });
+              TogglButton.setBrowserActionBadge();
+              resolve({
+                success: false,
+                type: 'data',
+                error: `Fetch data failed ${xhr.status}`
+              });
+            }
+          } catch (e) {
+            report(e);
+          }
+        },
+        onError: function (xhr) {
+          TogglButton.setBrowserActionBadge();
+          resolve({
+            success: false,
+            type: 'data',
             error: 'Connectivity error'
           });
         }
@@ -299,92 +313,6 @@ window.TogglButton = {
       }
     }
     TogglButton.canSeeBillable = canSeeBillable;
-  },
-
-  setupSocket: function () {
-    // Don't reinitialize if socket is not closed
-    if (
-      TogglButton.websocket.socket &&
-      TogglButton.websocket.socket.readyState !== WebSocket.CLOSED
-    ) {
-      return;
-    }
-
-    try {
-      TogglButton.websocket.socket = new WebSocket('wss://stream.punch-in.dfau.de/ws');
-    } catch (error) {
-      bugsnagClient.notify(error, { context: 'websocket' });
-      TogglButton.retryWebsocketConnection();
-      return;
-    }
-
-    const authenticationMessage = {
-      type: 'authenticate',
-      api_token: TogglButton.$user.api_token
-    };
-    const pingResponse = JSON.stringify({
-      type: 'pong'
-    });
-
-    TogglButton.websocket.socket.onopen = function () {
-      TogglButton.resetWebsocketRetryCount();
-      const data = JSON.stringify(authenticationMessage);
-      try {
-        return TogglButton.websocket.socket.send(data);
-      } catch (error) {
-        if (process.env.DEBUG) console.log(error);
-        bugsnagClient.notify(error, { context: 'websocket' });
-      }
-    };
-
-    TogglButton.websocket.socket.onerror = function (event) {
-      // Note: The error event for websockets doesn't really contain anything reportable.
-      return console.error('Websocket error: ', event);
-    };
-
-    TogglButton.websocket.socket.onclose = function () {
-      bugsnagClient.leaveBreadcrumb('Websocket connection closed');
-      TogglButton.retryWebsocketConnection();
-    };
-
-    TogglButton.websocket.socket.onmessage = function (msg) {
-      // test for empty json
-      if (!msg.data) {
-        return;
-      }
-      const data = JSON.parse(msg.data);
-      if (data.model !== null) {
-        if (data.model === 'time_entry') {
-          TogglButton.updateCurrentEntry(data);
-        }
-      } else if (TogglButton.websocket.socket !== null) {
-        try {
-          TogglButton.websocket.socket.send(pingResponse);
-        } catch (error) {
-          if (process.env.DEBUG) console.log(error);
-          bugsnagClient.notify(error, { context: 'websocket' });
-        }
-      }
-    };
-  },
-
-  // Attempt a websocket reconnection, obeying timeouts and maximum retry limits
-  retryWebsocketConnection: function () {
-    // TODO: reintroduce some variance so we don't have all clients reconnecting at once
-    // Retry connection, increasing the timeout each time, up to 60 minutes.
-    const retrySeconds = backoff(TogglButton.websocket.retryCount);
-    setTimeout(() => {
-      TogglButton.websocket.retryCount++;
-      TogglButton.setupSocket();
-
-      bugsnagClient.leaveBreadcrumb(`Websocket reconnection attempt ${TogglButton.websocket.retryCount}`);
-      if (process.env.DEBUG) console.info(`Websocket reconnection attempt ${TogglButton.websocket.retryCount}`);
-    }, retrySeconds * 1000);
-  },
-
-  // Resets the reconnection state to give things another chance
-  resetWebsocketRetryCount: function () {
-    TogglButton.websocket.retryCount = 0;
   },
 
   updateTriggers: function (entry) {
@@ -629,7 +557,7 @@ window.TogglButton = {
     }
 
     return new Promise((resolve) => {
-      TogglButton.ajax('/time_entries', {
+      TogglButton.ajax('/timesheets', {
         method: 'POST',
         payload: entry,
         baseUrl: TogglButton.$ApiUrl,
@@ -643,7 +571,6 @@ window.TogglButton = {
               entry = JSON.parse(xhr.responseText);
               TogglButton.localEntry = entry;
               TogglButton.updateTriggers(entry);
-              ga.reportEvent(timeEntry.type, timeEntry.service);
               db.bumpTrackedCount();
             } else {
               error = xhr.responseText;
@@ -824,6 +751,8 @@ window.TogglButton = {
 
     const credentials = opts.credentials || TogglButton.getStoredCredentials();
 
+    alert('execute xhr request... for ' + resolvedUrl);
+
     xhr.open(method, resolvedUrl, true);
     xhr.setRequestHeader('IsTogglButton', 'true');
 
@@ -879,7 +808,7 @@ window.TogglButton = {
       };
 
       TogglButton.ajax(
-        `/time_entries/${TogglButton.$curEntry.id}`,
+        `/timesheets/${TogglButton.$curEntry.id}`,
         {
           method: 'PUT',
           payload: entry,
@@ -890,7 +819,6 @@ window.TogglButton = {
               TogglButton.updateEntriesDb();
               TogglButton.resetPomodoroProgress(null);
               TogglButton.setNannyTimer();
-              ga.reportEvent(timeEntry.type, timeEntry.service);
               resolve({ success: true, type: 'Stop' });
               browser.tabs.query({ active: true, currentWindow: true })
                 .then(filterTabs(function (tabs) {
@@ -927,7 +855,7 @@ window.TogglButton = {
       };
 
       TogglButton.ajax(
-        `/time_entries/${TogglButton.$curEntry.id}`,
+        `/timesheets/${TogglButton.$curEntry.id}`,
         {
           method: 'PUT',
           baseUrl: TogglButton.$ApiUrl,
@@ -938,7 +866,6 @@ window.TogglButton = {
               TogglButton.updateEntriesDb();
               TogglButton.resetPomodoroProgress(null);
               TogglButton.setNannyTimer();
-              ga.reportEvent(timeEntry.type, timeEntry.service);
 
               resolve({ success: true, type: 'Stop' });
               browser.tabs.query({ active: true, currentWindow: true })
@@ -1091,9 +1018,9 @@ window.TogglButton = {
       }
 
       TogglButton.ajax(
-        `/time_entries/${entry.id}`,
+        `/timesheets/${entry.id}`,
         {
-          method: 'PUT',
+          method: 'PATCH',
           payload: entry,
           baseUrl: TogglButton.$ApiUrl,
           onLoad: function (xhr) {
@@ -1119,7 +1046,6 @@ window.TogglButton = {
               } else {
                 resolve();
               }
-              ga.reportEvent(timeEntry.type, timeEntry.service);
             } catch (e) {
               report(e);
               resolve({
@@ -1142,7 +1068,7 @@ window.TogglButton = {
   deleteTimeEntry: function (timeEntry, sendResponse) {
     return new Promise(function (resolve, reject) {
       TogglButton.ajax(
-        `/time_entries/${timeEntry.id}`,
+        `/timesheets/${timeEntry.id}`,
         {
           method: 'DELETE',
           baseUrl: TogglButton.$ApiUrl,
@@ -1161,7 +1087,6 @@ window.TogglButton = {
             }
             try {
               resolve({ success: success, type: 'delete', id: timeEntry.id });
-              ga.reportEvent(timeEntry.type, timeEntry.service);
             } catch (e) {
               report(e);
               resolve({
@@ -1277,27 +1202,11 @@ window.TogglButton = {
   },
 
   logoutUser: function () {
-    return new Promise((resolve) => {
-      TogglButton.ajax('/sessions?created_with=' + TogglButton.$fullVersion, {
-        method: 'DELETE',
-        onLoad: function (xhr) {
-          TogglButton.$user = null;
-          TogglButton.updateTriggers(null);
-          TogglButton.removeStoredCredentials();
-          resolve({ success: xhr.status === 200, xhr: xhr });
-          if (xhr.status === 200) {
-            TogglButton.setBrowserActionBadge();
-          }
-          TogglButton.refreshPageLogout();
-        },
-        onError: function (xhr) {
-          resolve({
-            success: false,
-            type: 'logout'
-          });
-        }
-      });
-    });
+    TogglButton.$user = null;
+    TogglButton.updateTriggers(null);
+    TogglButton.removeStoredCredentials();
+    TogglButton.setBrowserActionBadge();
+    TogglButton.refreshPageLogout();
   },
 
   getEditForm: function () {
@@ -1737,8 +1646,6 @@ window.TogglButton = {
   notificationBtnClick: function (notificationId, buttonID) {
     let type = 'dropdown-pomodoro';
     let timeEntry = TogglButton.$curEntry;
-    let buttonName = 'start_new';
-    let eventType = 'reminder';
 
     if (notificationId === 'remind-to-track-time') {
       type = 'dropdown-reminder';
@@ -1752,15 +1659,12 @@ window.TogglButton = {
           timeEntry.service = type;
           // continue timer
           TogglButton.createTimeEntry(timeEntry, null);
-          buttonName = 'continue';
         } else {
           browser.tabs.create({ url: 'https://punch-in.dfau.de/app/' });
-          buttonName = 'go_to_web';
         }
       }
     } else if (notificationId === 'idle-detection') {
       if (buttonID === 0 || buttonID === 1) {
-        buttonName = 'discard';
         // discard idle time
         TogglButton.stopTimeEntry({
           stopDate: TogglButton.$idleNotificationDiscardSince,
@@ -1770,11 +1674,9 @@ window.TogglButton = {
           if (buttonID === 1) {
             timeEntry.type = 'idle-detection-notification-continue';
             TogglButton.createTimeEntry(timeEntry);
-            buttonName = 'discard_continue';
           }
         });
       }
-      eventType = 'idle';
     } else if (notificationId === 'pomodoro-time-is-up') {
       if (buttonID === 0) {
         timeEntry = TogglButton.$latestStoppedEntry;
@@ -1786,12 +1688,10 @@ window.TogglButton = {
         }
         // continue timer
         TogglButton.createTimeEntry(timeEntry, null);
-        buttonName = 'continue';
       } else {
         // start timer
         TogglButton.createTimeEntry({ type: 'timeEntry', service: type }, null);
       }
-      eventType = 'pomodoro';
     } else if (notificationId === 'workday-ended-notification') {
       if (buttonID === 0) {
         timeEntry = TogglButton.$latestStoppedEntry;
@@ -1803,21 +1703,17 @@ window.TogglButton = {
         }
         // continue timer
         TogglButton.createTimeEntry(timeEntry, null);
-        buttonName = 'continue';
       }
-      eventType = 'workday-end';
     } else if (notificationId === 'pomodoro-time-is-up-dont-stop') {
       if (buttonID === 0) {
         TogglButton.stopTimeEntry(TogglButton.$curEntry);
       } else {
         TogglButton.createTimeEntry({ type: 'timeEntry', service: type }, null);
       }
-      eventType = 'pomodoro';
     }
     if (!FF) {
       TogglButton.onNotificationClicked(notificationId);
     }
-    ga.reportEvent(eventType, buttonName);
   },
 
   isDuringWorkHours: async function () {

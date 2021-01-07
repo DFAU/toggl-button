@@ -37,7 +37,7 @@ declare module Toggl {
     name: string;
     billable: boolean;
     is_private: boolean;
-    active: boolean;
+    visible: boolean;
     template: boolean;
     at: string;
     created_at: string;
