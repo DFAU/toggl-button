@@ -104,7 +104,7 @@ const Settings = {
         localStorage.setItem('darkMode', true);
       }
 
-      Settings.$loginInfo.textContent = TogglButton.$user && TogglButton.$user.email || '';
+      Settings.$loginInfo.textContent = TogglButton.$user && TogglButton.$user.username || '';
 
       document.querySelector('.expand').addEventListener('click', e => {
         const expand = e.target.closest('.expand');
