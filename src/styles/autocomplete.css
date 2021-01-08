@@ -95,18 +95,50 @@
 }
 
 .project-autocomplete.filtered li,
-#tag-autocomplete.filtered li {
+#tag-autocomplete.filtered li,
+.task-autocomplete.filtered li
+{
   display: none;
 }
 
 .project-autocomplete.filtered li.filter,
-#tag-autocomplete.filtered li.filter {
+#tag-autocomplete.filtered li.filter,
+.task-autocomplete.filtered li.filter
+{
   display: flex;
 }
 
 #tag-autocomplete li.workspace-filter {
   display: none !important;
 }
+
+.task-autocomplete li.project-filter {
+  display: none !important;
+}
+
+.task-autocomplete ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.task-autocomplete .task-item {
+  padding-left: 10px;
+  color: var(--font-color);
+  height: 30px;
+  line-height: 30px;
+
+  /* Truncate task names. Full name will be in title attribute */
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+
+.task-autocomplete .task-item:hover {
+  background-color: hsla(0,0%,69.4%,.07);
+  cursor: pointer;
+}
+
 
 .client-list.filter .client-row,
 .ws-list.filter .ws-row,

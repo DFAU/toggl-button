@@ -11,7 +11,7 @@ import Summary from './components/Summary';
 import TimeEntriesList from './components/TimeEntriesList';
 import Pomodoro from './components/Pomodoro';
 import Timer from './components/Timer';
-import { ProjectAutoComplete, TagAutoComplete } from './lib/autocomplete';
+import { ProjectAutoComplete, TagAutoComplete, TaskAutoComplete } from './lib/autocomplete';
 import { parseDuration } from './lib/timerUtils';
 import { groupTimeEntriesByDay } from './lib/groupUtils';
 import renderLogin from './initializers/login';
@@ -355,6 +355,8 @@ const Popup = {
   },
 
   addTimeEntry: function (selected, tags) {
+    alert('add Time Entry...');
+
     const request = {
       type: 'timeEntry',
       description: this.$newView.querySelector('#toggl-button-description').value,
@@ -568,6 +570,13 @@ const Popup = {
       this.$newView
     );
 
+    const taskDropdown = new TaskAutoComplete(
+      'task',
+      'li',
+      Popup,
+      this.$newView
+    );
+
     const tagsInput = new TagAutoComplete('tag', 'li', PopUp, this.$newView);
 
     const cancelButton = PopUp.$newView.querySelector('#tb-edit-form-cancel');
@@ -585,10 +594,49 @@ const Popup = {
         }
       });
 
+    projectDropdown.onChange(function (selected) {
+      const project = TogglButton.findProjectByPid(selected.pid);
+      if (project) {
+        taskDropdown.setProjectId(project.id);
+      }
+    });
+
     PopUp.$newView
       .querySelector('#toggl-button-start')
       .addEventListener('click', function (e) {
-        PopUp.addTimeEntry(projectDropdown.getSelected(), tagsInput.getSelected());
+        const selectedProject = projectDropdown.getSelected();
+        const selectedTask = taskDropdown.getSelected();
+        if (selectedProject.pid <= 0) {
+          alert('Select Project');
+          return;
+        }
+        if (selectedTask.tid === null) {
+          alert('Select Task');
+          return;
+        }
+
+        selectedProject.tid = selectedTask.tid;
+        PopUp.addTimeEntry(selectedProject, tagsInput.getSelected());
+      });
+
+    PopUp.$newView
+      .querySelector('form')
+      .addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const selectedProject = projectDropdown.getSelected();
+        const selectedTask = taskDropdown.getSelected();
+        if (selectedProject.pid <= 0) {
+          alert('Select Project');
+          return;
+        }
+        if (selectedTask.tid === null) {
+          alert('Select Task');
+          return;
+        }
+
+        selectedProject.tid = selectedTask.tid;
+        PopUp.addTimeEntry(selectedProject, tagsInput.getSelected());
       });
   },
 

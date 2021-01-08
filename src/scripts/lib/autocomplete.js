@@ -873,3 +873,117 @@ TagAutoComplete.prototype.addNew = function (text) {
   this.filter.value = '';
   this.filterSelection();
 };
+
+export const TaskAutoComplete = function (el, item, elem, container) {
+  AutoComplete.call(this, el, item, elem, container);
+  this.project = null;
+};
+
+inheritsFrom(TaskAutoComplete, AutoComplete);
+
+TaskAutoComplete.prototype.setup = function (selected, pid) {
+  this.setSelected(selected);
+  this.setProjectId(pid);
+};
+
+TaskAutoComplete.prototype.setProjectId = function (pid) {
+  this.pid = pid;
+  const listItems = this.el.querySelectorAll(this.item);
+
+  const stringPid = pid.toString();
+
+  let task;
+
+  let key;
+
+  for (key in listItems) {
+    if (listItems.hasOwnProperty(key)) {
+      task = listItems[key];
+      if (task.dataset.pid === stringPid || task.dataset.pid === 'null') {
+        task.classList.remove('project-filter');
+      } else {
+        task.classList.add('project-filter');
+      }
+    }
+  }
+};
+
+TaskAutoComplete.prototype.getSelected = function () {
+  const selected = this.el.querySelector('.task-list .selected-task');
+
+  const tid = selected ? parseInt(selected.getAttribute('data-tid'), 10) : null;
+
+  const name = selected ? selected.getAttribute('title') : '';
+
+  return {
+    el: selected,
+    tid: tid,
+    name: name
+  };
+};
+
+TaskAutoComplete.prototype.filterSelection = function () {
+  let key;
+
+  const val = this.filter.value.toLowerCase();
+
+  let row;
+
+  let text;
+
+  if (val === this.lastFilter) {
+    return;
+  }
+
+  if (val.length > 0 && !this.el.classList.contains('filtered')) {
+    this.el.classList.add('filtered');
+  }
+  if (val.length === 0) {
+    this.clearFilters();
+    return;
+  }
+  this.lastFilter = val;
+  this.exactMatch = false;
+  for (key in this.listItems) {
+    if (this.listItems.hasOwnProperty(key)) {
+      row = this.listItems[key];
+      text = row.getAttribute('title').toLowerCase();
+      if (text.indexOf(val) !== -1) {
+        if (text === val) {
+          this.exactMatch = val;
+        }
+        row.classList.add('filter');
+      } else if (row.classList) {
+        row.classList.remove('filter');
+      }
+    }
+  }
+};
+
+TaskAutoComplete.prototype.addEvents = function () {
+  const that = this;
+  this.super.addEvents.call(this);
+
+  that.el.addEventListener('click', function (e) {
+    e.stopPropagation();
+    that.selectTask(e.target);
+  });
+};
+
+TaskAutoComplete.prototype.selectTask = function (elem, silent) {
+  const currentSelected = this.el.querySelector('.selected-' + this.type);
+
+  if (currentSelected) {
+    currentSelected.classList.remove('selected-' + this.type);
+  }
+  elem.classList.add('selected-' + this.type);
+
+  // Update placeholder
+  this.placeholderDiv.textContent = this.placeholderDiv.title = elem.textContent;
+
+  if (!silent) {
+    // Close dropdown
+    this.closeDropdown();
+  }
+  return false;
+};

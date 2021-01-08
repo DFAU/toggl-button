@@ -166,7 +166,20 @@ window.TogglButton = {
       </div>
     </div>
     ` +
-
+    `
+    <div class="TB__Dialog__field" tabindex="0">
+      <div>
+        <div id="toggl-button-task-placeholder" class="TB__FormFieldTrigger__trigger" disabled><span class="tb-task-bullet"><div>No task</div></span><span class="TB__Popdown__caret"></span></div>
+        <div class="TB__Popdown__overlay"></div>
+        <div class="TB__Popdown__content">
+          <div class="TB__Popdown__filterContainer">
+            <input name="toggl-button-task-filter" type="text" id="toggl-button-task-filter" class="TB__Popdown__filter" value="" placeholder="Find task..." autocomplete="off">
+          </div>
+          <div id="task-autocomplete" class="task-autocomplete">{tasks}</div>
+        </div>
+      </div>
+    </div>
+    ` +
     `
     <div class="TB__Dialog__field" tabindex="0">
       <div>
@@ -272,6 +285,7 @@ window.TogglButton = {
                     }
                     projectTaskList[pid].push(task);
                   });
+                  TogglButton.$user.tasks = tasks;
                   TogglButton.$user.projectTaskList = projectTaskList;
                 }
               );
@@ -1281,6 +1295,7 @@ window.TogglButton = {
     }
     return TogglButton.$newForm
       .replace('{projects}', TogglButton.fillProjects())
+      .replace('{tasks}', TogglButton.fillTasks())
       .replace('{tags}', TogglButton.fillTags())
       .replace('{billable}', TogglButton.setupBillable());
   },
@@ -1447,6 +1462,28 @@ window.TogglButton = {
       : [];
 
     return [...projectTasks, ...defaultTasks];
+  },
+
+  fillTasks: function () {
+    const tasks = (TogglButton.$user.tasks || [])
+      .sort((t1, t2) => t1.name.localeCompare(t2.name))
+      .map((t) => `
+        <li
+          class="task-item"
+          data-tid="${escapeHtml(t.id)}"
+          data-pid="${escapeHtml(t.project)}"
+          title="${escapeHtml(t.name)}"
+        >
+        ${escapeHtml(t.name)}
+        </li>
+      `.trim()
+      ).join('\n');
+
+    return `
+      <ul class="task-list">
+        ${tasks}
+      </ul>
+    `.trim();
   },
 
   fillTags: function () {
