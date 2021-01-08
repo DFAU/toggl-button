@@ -67,12 +67,8 @@ function TimerForm () {
     const description = inputRef && inputRef.current
       ? inputRef.current.value
       : '';
-    try {
-      window.PopUp.renderNewForm(description);
-    } catch(e) {
-      alert(e);
-    }
-      //window.PopUp.sendMessage({ type: 'timeEntry', description, service: 'dropdown', respond: true });
+
+    window.PopUp.renderNewForm(description);
   };
   const onKeyUp = (e) => {
     if (keycode(e.which) === 'enter') {

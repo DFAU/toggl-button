@@ -380,8 +380,6 @@ ProjectAutoComplete.prototype.selectProject = function (
   silent,
   removeTask
 ) {
-  console.log('select Project');
-
   if (elem.classList.contains('item-name') || elem.classList.contains('tb-project-bullet')) {
     elem = elem.closest('li') || elem.closest('p'); // project row / no-project row
   }

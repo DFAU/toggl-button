@@ -569,7 +569,7 @@ window.TogglButton = {
   createTimeEntry: async function (timeEntry) {
     const type = timeEntry.type;
     const container = timeEntry.container;
-    const start = new Date();
+    const begin = new Date();
     let defaultProject;
     const rememberProjectPer = await db.get('rememberProjectPer');
     const enableAutoTagging = await db.get('enableAutoTagging');
@@ -606,31 +606,22 @@ window.TogglButton = {
     );
 
     entry = {
-      start: start.toISOString(),
-      stop: null,
-      duration: -parseInt(start.getTime() / 1000, 10),
+      begin: begin.toISOString(),
       description: timeEntry.description || '',
-      pid: timeEntry.pid || timeEntry.projectId || null,
-      tid: timeEntry.tid || null,
-      wid: timeEntry.wid || TogglButton.$user.default_wid,
-      tags: shouldIncludeTags ? (timeEntry.tags || null) : null,
-      billable: timeEntry.billable || false,
-      created_with: timeEntry.createdWith || TogglButton.$fullVersion
+      project: timeEntry.project || timeEntry.projectId || null,
+      activity: timeEntry.activity || null,
+      tags: shouldIncludeTags ? (timeEntry.tags || null) : null
     };
 
-    if (timeEntry.projectName !== null && !entry.pid) {
+    if (timeEntry.projectName !== null && !entry.project) {
       project = TogglButton.findProjectByName(timeEntry.projectName);
-      entry.pid = (project && project.id) || null;
-      entry.billable = project && project.billable;
-      entry.wid = (project && project.wid) || entry.wid;
+      entry.project = (project && project.project) || null;
     }
 
     // set Default project if needed
-    if (!entry.pid && !!defaultProject) {
+    if (!entry.project && !!defaultProject) {
       project = TogglButton.findProjectByPid(defaultProject);
-      entry.pid = (project && project.id) || null;
-      entry.billable = project && project.billable;
-      entry.wid = (project && project.wid) || entry.wid;
+      entry.project = (project && project.id) || null;
     }
 
     return new Promise((resolve) => {
