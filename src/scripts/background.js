@@ -210,7 +210,7 @@ window.TogglButton = {
       TogglButton.ajax('/users/me', {
         credentials: credentials,
         baseUrl: TogglButton.$ApiUrl,
-        onLoad: function (xhr) {
+        onLoad: async function (xhr) {
           let resp;
           const clientMap = {};
           const clientNameMap = {};
@@ -233,7 +233,7 @@ window.TogglButton = {
                 name: 'default'
               }];
 
-              TogglButton.fetchData('/projects').then(
+              await TogglButton.fetchData('/projects').then(
                 (projects) => {
                   projects.forEach(function (project) {
                     if (project.visible) {
@@ -247,7 +247,7 @@ window.TogglButton = {
                 }
               );
 
-              TogglButton.fetchData('/customers').then(
+              await TogglButton.fetchData('/customers').then(
                 (clients) => {
                   clients.forEach(function (client) {
                     // workaround due to missing workspaces
@@ -261,7 +261,7 @@ window.TogglButton = {
                 }
               );
 
-              TogglButton.fetchData('/activities').then(
+              await TogglButton.fetchData('/activities').then(
                 (tasks) => {
                   tasks.forEach(function (task) {
                     // workaround due to missing workspaces
@@ -276,7 +276,7 @@ window.TogglButton = {
                 }
               );
 
-              TogglButton.fetchData('/timesheets').then(
+              await TogglButton.fetchData('/timesheets').then(
                 (timesheets) => {
                   entry = timesheets.find(te => te.duration === 0) || null;
                   timesheets.forEach(function (timesheet) {
