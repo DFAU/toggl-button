@@ -153,7 +153,7 @@ window.TogglButton = {
           let resp;
           const clientMap = {};
           const clientNameMap = {};
-          const projectTaskList = null;
+          const projectTaskList = {};
           const projectMap = {};
           let entry = null;
 
@@ -205,13 +205,12 @@ window.TogglButton = {
                   tasks.forEach(function (task) {
                     // workaround due to missing workspaces
                     task.wid = 0;
-                    const pid = task.project;
+                    const pid = task.project ? task.project : 0;
                     if (!projectTaskList[pid]) {
                       projectTaskList[pid] = [];
                     }
                     projectTaskList[pid].push(task);
                   });
-
                   TogglButton.$user.projectTaskList = projectTaskList;
                 }
               );
@@ -1324,10 +1323,12 @@ window.TogglButton = {
 
   generateProjectItem: function (project) {
     const tasks = TogglButton.$user.projectTaskList
-      ? TogglButton.$user.projectTaskList[project.id]
+      ? this.getProjectTasks(project)
       : null;
+
     let i;
     let tasksCount;
+
     const hasTasks = tasks ? 'has-tasks' : '';
     let html =
         '<li class="project-row" title="' +
@@ -1373,6 +1374,17 @@ window.TogglButton = {
     }
 
     return html + '</li>';
+  },
+
+  getProjectTasks: function (project) {
+    const projectTasks = TogglButton.$user.projectTaskList.hasOwnProperty(project.id)
+      ? TogglButton.$user.projectTaskList[project.id]
+      : [];
+    const defaultTasks = TogglButton.$user.projectTaskList.hasOwnProperty(0)
+      ? TogglButton.$user.projectTaskList[0]
+      : [];
+
+    return [...projectTasks, ...defaultTasks];
   },
 
   fillTags: function () {
