@@ -610,7 +610,7 @@ window.TogglButton = {
       description: timeEntry.description || '',
       project: timeEntry.project || timeEntry.projectId || null,
       activity: timeEntry.activity || null,
-      tags: shouldIncludeTags ? (timeEntry.tags || null) : null
+      tags: shouldIncludeTags ? (timeEntry.tags.join(',') || null) : null
     };
 
     if (timeEntry.projectName !== null && !entry.project) {
