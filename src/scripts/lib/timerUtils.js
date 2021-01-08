@@ -74,7 +74,7 @@ export function calculateDuration (start, stop) {
  * @return {Date} stop date
  */
 export function calculateStopDate (start, duration) {
-  if (duration < 0) return null;
+  if (duration <= 0) return null;
 
   const startValue = start.valueOf();
   const stopValue = startValue + duration * 1000;

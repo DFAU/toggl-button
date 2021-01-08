@@ -241,7 +241,7 @@ const GroupedEntryCounter = styled.div`
 `;
 
 function TimeEntryDuration ({ duration }: { duration: number }) {
-  if (!duration || duration < 0) return null;
+  if (!duration || duration <= 0) return null;
   const since = subSeconds(Date.now(),  duration).toUTCString();
   return (
     <div>{formatDuration(since)}</div>

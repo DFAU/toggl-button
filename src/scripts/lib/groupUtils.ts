@@ -18,7 +18,7 @@ const hasExistingGroup = (entry: Toggl.TimeEntry) => ([te]: Toggl.TimeEntry[]) =
 export const groupTimeEntriesByDay = (timeEntries: Toggl.TimeEntry[]) => {
   const { listEntries, projects } = [...timeEntries].reverse().reduce((sum, entry) => {
     // Exclude running TE.
-    if (entry.duration < 0) {
+    if (entry.duration <= 0) {
       return sum;
     }
 

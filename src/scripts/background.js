@@ -278,7 +278,7 @@ window.TogglButton = {
 
               await TogglButton.fetchData('/timesheets').then(
                 (timesheets) => {
-                  entry = timesheets.find(te => te.duration === 0) || null;
+                  entry = timesheets.find(te => te.duration <= 0) || null;
                   timesheets.forEach(function (timesheet) {
                     // workaround due to missing workspaces
                     timesheet.wid = 0;
@@ -1918,7 +1918,7 @@ window.TogglButton = {
     timeEntries.forEach(function (entry) {
       // Calc today total
       if (new Date(entry.begin).getTime() > today.getTime()) {
-        if (entry.duration < 0) {
+        if (entry.duration <= 0) {
           todaySum += (new Date() - new Date(entry.begin)) / 1000;
         } else {
           todaySum += entry.duration;
@@ -1927,7 +1927,7 @@ window.TogglButton = {
 
       // Calc week total
       if (new Date(entry.begin).getTime() > weekStart.getTime()) {
-        if (entry.duration < 0) {
+        if (entry.duration <= 0) {
           weekSum += (new Date() - new Date(entry.begin)) / 1000;
         } else {
           weekSum += entry.duration;
