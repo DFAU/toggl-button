@@ -354,13 +354,13 @@ const Popup = {
     PopUp.$billable.classList.toggle('tb-checked', billable);
   },
 
-  addTimeEntry: function (selected) {
+  addTimeEntry: function (selected, tags) {
     const request = {
       type: 'timeEntry',
       description: this.$newView.querySelector('#toggl-button-description').value,
       project: selected.pid,
       activity: selected.tid,
-      tags: [],
+      tags: tags,
       service: 'dropdown',
       respond: true
     };
@@ -561,12 +561,14 @@ const Popup = {
 
   addNewEvents: function () {
     /* Edit form events */
-    const newProjectDropdown = new ProjectAutoComplete(
+    const projectDropdown = new ProjectAutoComplete(
       'project',
       'li',
       PopUp,
       this.$newView
     );
+
+    const tagsInput = new TagAutoComplete('tag', 'li', PopUp, this.$newView);
 
     const cancelButton = PopUp.$newView.querySelector('#tb-edit-form-cancel');
     cancelButton
@@ -586,7 +588,7 @@ const Popup = {
     PopUp.$newView
       .querySelector('#toggl-button-start')
       .addEventListener('click', function (e) {
-        PopUp.addTimeEntry(newProjectDropdown.getSelected());
+        PopUp.addTimeEntry(projectDropdown.getSelected(), tagsInput.getSelected());
       });
   },
 
