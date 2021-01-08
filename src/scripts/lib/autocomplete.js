@@ -7,14 +7,14 @@ const inheritsFrom = function (child, parent) {
   child.prototype.super = parent.prototype;
 };
 
-const AutoComplete = function (el, item, elem) {
+const AutoComplete = function (el, item, elem, container) {
   this.type = el;
-  this.el = document.querySelector('#' + el + '-autocomplete');
+  this.el = container.querySelector('#' + el + '-autocomplete');
   this.content = this.el.parentElement;
-  this.filter = document.querySelector('#toggl-button-' + el + '-filter');
+  this.filter = container.querySelector('#toggl-button-' + el + '-filter');
   this.field = this.el.closest('.TB__Dialog__field');
   this.overlay = this.field.querySelector('.TB__Popdown__overlay');
-  this.placeholderItem = document.querySelector(
+  this.placeholderItem = container.querySelector(
     '#toggl-button-' + el + '-placeholder'
   );
   this.placeholderDiv = this.placeholderItem.querySelector('div');
@@ -159,8 +159,8 @@ AutoComplete.prototype.updateHeight = function () {
 
 //* Project autocomplete *//
 
-export const ProjectAutoComplete = function (el, item, elem) {
-  AutoComplete.call(this, el, item, elem);
+export const ProjectAutoComplete = function (el, item, elem, container) {
+  AutoComplete.call(this, el, item, elem, container);
   this.onChangeHandler = noop;
   this.selectedItem = -1;
   this.selectedTask = -1;
@@ -380,6 +380,8 @@ ProjectAutoComplete.prototype.selectProject = function (
   silent,
   removeTask
 ) {
+  console.log('select Project');
+
   if (elem.classList.contains('item-name') || elem.classList.contains('tb-project-bullet')) {
     elem = elem.closest('li') || elem.closest('p'); // project row / no-project row
   }
@@ -626,8 +628,8 @@ ProjectAutoComplete.prototype.removeChangeHandler = function () {
 
 //* Tag autocomplete *//
 
-export const TagAutoComplete = function (el, item, elem) {
-  AutoComplete.call(this, el, item, elem);
+export const TagAutoComplete = function (el, item, elem, container) {
+  AutoComplete.call(this, el, item, elem, container);
   this.wid = null;
 };
 

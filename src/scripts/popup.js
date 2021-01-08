@@ -33,12 +33,14 @@ const Popup = {
   $tagsVisible: false,
   mousedownTrigger: null,
   projectBlurTrigger: null,
+  newFormAdded: false,
   editFormAdded: false,
   durationChanged: false,
   $billable: null,
   $header: document.querySelector('.header'),
   $menuView: document.querySelector('#menu'),
   $editView: document.querySelector('#toggl-button-entry-form'),
+  $newView: document.querySelector('#toggl-button-new-form'),
   $loginView: document.querySelector('#login-view'),
   $revokedWorkspaceView: document.querySelector('#revoked-workspace'),
   $entries: document.querySelector('.entries-list'),
@@ -51,6 +53,14 @@ const Popup = {
 
     try {
       if (TogglButton.$user !== null) {
+        if (!PopUp.newFormAdded) {
+          dom = document.createElement('div');
+          dom.innerHTML = TogglButton.getNewForm();
+          PopUp.$newView.appendChild(dom.firstChild);
+          PopUp.addNewEvents();
+          PopUp.newFormAdded = true;
+        }
+
         if (!PopUp.editFormAdded) {
           dom = document.createElement('div');
           dom.innerHTML = TogglButton.getEditForm();
@@ -204,7 +214,7 @@ const Popup = {
    */
   renderEditForm: function (timeEntry) {
     const pid = timeEntry.project || 0;
-    const tid = timeEntry.tid || 0;
+    const tid = timeEntry.activity || 0;
     const wid = timeEntry.wid;
     const togglButtonDescription = document.querySelector(
       '#toggl-button-description'
@@ -243,6 +253,32 @@ const Popup = {
     if (isCurrentEntry) {
       PopUp.updateDurationInput(true);
     }
+  },
+  /**
+   * Render edit-form for given time entry object
+   * @param description {string}
+   */
+  renderNewForm: function (description) {
+    const pid = 0;
+    const tid = 0;
+    const wid = 0;
+    const togglButtonDescription = Popup.$newView.querySelector(
+      '#toggl-button-description'
+    );
+    togglButtonDescription.value = description;
+
+    PopUp.$projectAutocomplete.setup(pid, tid);
+    PopUp.$tagAutocomplete.setup([], wid);
+
+    PopUp.setupBillable(false, pid);
+    PopUp.switchView(PopUp.$newView);
+
+    // Put focus to the beginning of description field
+    togglButtonDescription.focus();
+    togglButtonDescription.setSelectionRange(0, 0);
+    togglButtonDescription.scrollLeft = 0;
+
+    PopUp.durationChanged = false;
   },
 
   updateDurationInput: function (startTimer) {
@@ -316,6 +352,13 @@ const Popup = {
   setupBillable: function (billable, pid) {
     PopUp.updateBillable(pid, true);
     PopUp.$billable.classList.toggle('tb-checked', billable);
+  },
+
+  addTimeEntry: function () {
+    // todo
+    if (!this.isformValid()) {
+
+    }
   },
 
   updateTimeEntry: function () {
@@ -405,9 +448,10 @@ const Popup = {
     PopUp.$projectAutocomplete = new ProjectAutoComplete(
       'project',
       'li',
-      PopUp
+      PopUp,
+      this.$editView
     );
-    PopUp.$tagAutocomplete = new TagAutoComplete('tag', 'li', PopUp);
+    PopUp.$tagAutocomplete = new TagAutoComplete('tag', 'li', PopUp, this.$editView);
     PopUp.$billable = document.querySelector('.tb-billable');
 
     document
@@ -505,6 +549,40 @@ const Popup = {
         e.preventDefault();
       }
     });
+  },
+
+  addNewEvents: function () {
+    /* Edit form events */
+    const newProjectDropdown = new ProjectAutoComplete(
+      'project',
+      'li',
+      PopUp,
+      this.$newView
+    );
+
+    newProjectDropdown.onChange(function (selected) {
+      console.log('selected');
+    });
+
+    const cancelButton = PopUp.$newView.querySelector('#tb-edit-form-cancel');
+    cancelButton
+      .addEventListener('click', function (e) {
+        e.preventDefault();
+        PopUp.closeForm();
+      });
+
+    cancelButton
+      .addEventListener('keydown', function (e) {
+        if (e.code === 'Enter' || e.code === 'Space') {
+          e.preventDefault();
+          PopUp.closeForm();
+        }
+      });
+    PopUp.$newView.querySelector('form')
+      .addEventListener('submit', function (e) {
+        PopUp.updateTimeEntry(this);
+        e.preventDefault();
+      });
   },
 
   handleBackgroundMessage: function (request) {

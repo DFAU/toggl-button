@@ -15,7 +15,9 @@
   margin-bottom: 10px;
 }
 
-.TB__Input, #toggl-button-edit-form .TB__Input {
+.TB__Input,
+.toggl-button-form .TB__Input:focus,
+.toggl-button-form .TB__Input {
   /* reset */
   box-sizing: border-box;
   margin: 0;
@@ -132,7 +134,7 @@
   padding: 15px 15px 10px;
 }
 
-.TB__Popdown__filter, #toggl-button-edit-form .TB__Popdown__filter {
+.TB__Popdown__filter, .toggl-button-form .TB__Popdown__filter {
   width: 100%;
   padding: 0 0 0 32px;
   margin: 0;
@@ -145,7 +147,7 @@
   color: var(--font-color);
 }
 
-#toggl-button-edit-form .TB__Popdown__filter::placeholder {
+.toggl-button-form .TB__Popdown__filter::placeholder {
   color: var(--font-color) !important;
   opacity: 0.8;
 }
@@ -169,17 +171,17 @@
   height: 315px;
 }
 
-#toggl-button-entry-form * {
+.toggl-button-form * {
   box-sizing: border-box !important;
 }
 
-#toggl-button-edit-form {
+.toggl-button-form {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-#toggl-button-edit-form a.toggl-button {
+.toggl-button-form a.toggl-button {
   margin: 0 0 1rem 0 !important;
   border: none !important;
   visibility: visible !important;
@@ -188,19 +190,19 @@
   color: var(--font-color);
 }
 
-#toggl-button-edit-form a.toggl-button:hover {
+.toggl-button-form a.toggl-button:hover {
   background-color: transparent;
   text-decoration: underline;
 }
 
-#toggl-button-edit-form .toggl-button-input {
+.toggl-button-form .toggl-button-input {
   background: #f5f5f5;
   border: 1px solid #e1e1e1;
   font-size: 0.7em;
   padding: 0 10px;
 }
 
-#toggl-button-edit-form .toggl-button-text {
+.toggl-button-form .toggl-button-text {
   float: left;
   width: 186px;
   height: 40px;
@@ -209,7 +211,7 @@
   overflow: hidden;
 }
 
-#toggl-button-edit-form #toggl-button-duration {
+.toggl-button-form #toggl-button-duration {
   font-size: 22px;
   text-align: center;
   width: 100%;
@@ -217,18 +219,18 @@
   font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
 }
 
-#toggl-button-edit-form #toggl-button-project-placeholder,
-#toggl-button-edit-form #toggl-button-tag-placeholder {
+.toggl-button-form #toggl-button-project-placeholder,
+.toggl-button-form #toggl-button-tag-placeholder {
   color: #8a8989;
   cursor: pointer;
 }
 
-#toggl-button-edit-form #toggl-button-project-placeholder {
+.toggl-button-form #toggl-button-project-placeholder {
   position: relative;
 }
 
-#toggl-button-edit-form #toggl-button-project-placeholder span,
-#toggl-button-edit-form #toggl-button-tag-placeholder span {
+.toggl-button-form #toggl-button-project-placeholder span,
+.toggl-button-form #toggl-button-tag-placeholder span {
   float: right;
   color: #abaaaa;
   cursor: pointer;
@@ -237,23 +239,23 @@
   overflow: hidden;
 }
 
-#toggl-button-edit-form #toggl-button-project-placeholder span div {
+.toggl-button-form #toggl-button-project-placeholder span div {
   text-overflow: ellipsis;
   overflow: hidden;
 }
 
-#toggl-button-edit-form #toggl-button-project,
-#toggl-button-edit-form #toggl-button-tag {
+.toggl-button-form #toggl-button-project,
+.toggl-button-form #toggl-button-tag {
   visibility: hidden;
   position: absolute;
 }
 
-#toggl-button-edit-form #toggl-button-project {
+.toggl-button-form #toggl-button-project {
   visibility: visible !important;
   max-width: 220px;
 }
 
-#toggl-button-edit-form #toggl-button-tag {
+.toggl-button-form #toggl-button-tag {
   display: none;
   visibility: visible;
   background: #ffffff;
@@ -329,6 +331,7 @@
 }
 
 #tb-edit-form-cancel,
+#toggl-button-start,
 #toggl-button-update {
   flex: 1;
 }
@@ -337,21 +340,21 @@
   margin-right: 10px;
 }
 
-#toggl-button-edit-form #toggl-button-update {
+.toggl-button-form #toggl-button-update {
   height: 36px;
   font-weight: normal;
 }
 
-#toggl-button-edit-form form:invalid #toggl-button-update {
+.toggl-button-form form:invalid #toggl-button-update {
   background-color: #cccccc;
   cursor: default;
 }
 
-#toggl-button-edit-form input:invalid {
+.toggl-button-form input:invalid {
   color: #ff3333;
 }
 
-#toggl-button-edit-form #toggl-button-hide {
+.toggl-button-form #toggl-button-hide {
   float: right;
   width: 25px;
   height: 25px;
@@ -373,13 +376,13 @@
   display: none;
 }
 
-#toggl-button-edit-form.toggl-integration #toggl-button-hide {
+.toggl-button-form.toggl-integration #toggl-button-hide {
   display: initial;
 }
 
 /** Billable flag **/
 
-#toggl-button-edit-form .tb-billable {
+.toggl-button-form .tb-billable {
   outline: none;
   height: 40px;
   line-height: 40px;
@@ -393,15 +396,15 @@
   margin-top: 10px;
 }
 
-#toggl-button-edit-form .tb-billable.no-billable {
+.toggl-button-form .tb-billable.no-billable {
   height: 0;
 }
 
-#toggl-button-edit-form .toggl-button-billable-label {
+.toggl-button-form .toggl-button-billable-label {
   float: left;
 }
 
-#toggl-button-edit-form .toggl-button-billable-flag {
+.toggl-button-form .toggl-button-billable-flag {
   width: 42px;
   height: 24px;
   border-radius: 100px;
@@ -413,7 +416,7 @@
   cursor: pointer;
 }
 
-#toggl-button-edit-form .toggl-button-billable-flag span {
+.toggl-button-form .toggl-button-billable-flag span {
   width: 18px;
   height: 18px;
   background-color: #ffffff;
@@ -424,18 +427,18 @@
   transition: left 200ms ease-in-out;
 }
 
-#toggl-button-edit-form .tb-billable.tb-checked .toggl-button-billable-flag {
+.toggl-button-form .tb-billable.tb-checked .toggl-button-billable-flag {
   background-color: #4bc800;
 }
 
-#toggl-button-edit-form
+.toggl-button-form
   .tb-billable.tb-checked
   .toggl-button-billable-flag
   span {
   left: 20px;
 }
 
-#toggl-button-edit-form .tb-billable:focus .toggl-button-billable-flag {
+.toggl-button-form .tb-billable:focus .toggl-button-billable-flag {
   border: 1px solid rgb(83, 183, 253);
   box-shadow: 0px 0px 5px rgb(26, 153, 243);
 }

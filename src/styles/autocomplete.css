@@ -1,5 +1,5 @@
 /** Project Autocomplete **/
-#tag-autocomplete, #project-autocomplete {
+#tag-autocomplete, .project-autocomplete {
   font-size: 14px;
   overflow-y: auto;
   padding: 0 6px;
@@ -14,33 +14,33 @@
   padding: 0 15px;
 }
 
-#project-autocomplete p {
+.project-autocomplete p {
   margin: 0;
   margin-top: 5px;
 }
 
-#project-autocomplete li:not(.ws-row):not(.client-row):hover,
-#project-autocomplete li.selected-item:not(.ws-row):not(.client-row),
-#project-autocomplete p.project-row.selected-item,
-#project-autocomplete p:hover {
+.project-autocomplete li:not(.ws-row):not(.client-row):hover,
+.project-autocomplete li.selected-item:not(.ws-row):not(.client-row),
+.project-autocomplete p.project-row.selected-item,
+.project-autocomplete p:hover {
   cursor: pointer;
   background-color: rgba(0,0,0,.05);
   outline: 0;
 }
 
-#project-autocomplete li:not(.ws-row):not(.client-row):hover {
+.project-autocomplete li:not(.ws-row):not(.client-row):hover {
   color: var(--active-font-color);
   background-color: var(--hover-selection);
   border-radius:0px;
 }
 
-#project-autocomplete ul {
+.project-autocomplete ul {
   list-style: none;
   padding: 0;
   margin: 0px;
 }
 
-#project-autocomplete .ws-row {
+.project-autocomplete .ws-row {
   height: 30px;
   line-height: 30px;
   justify-content: center;
@@ -52,11 +52,11 @@
   overflow: hidden;
 }
 
-#project-autocomplete .ws-row.hide {
+.project-autocomplete .ws-row.hide {
   display: none !important;
 }
 
-#project-autocomplete .project-row {
+.project-autocomplete .project-row {
   display: flex;
   flex-direction: row;
   flex-wrap: wrap;
@@ -69,7 +69,7 @@
   margin-bottom: 2px;
 }
 
-#project-autocomplete .project-row > *:first-child {
+.project-autocomplete .project-row > *:first-child {
   flex: 2;
   /* Truncate project names, avoid pushing out the task list */
   white-space: nowrap;
@@ -77,11 +77,11 @@
   overflow: hidden;
 }
 
-#project-autocomplete .project-row[data-pid='0'] {
+.project-autocomplete .project-row[data-pid='0'] {
   color: #a3a3a3;
 }
 
-#project-autocomplete .client-row {
+.project-autocomplete .client-row {
   height: 30px;
   padding: 15px 10px 5px;
   cursor: default;
@@ -94,12 +94,12 @@
   letter-spacing: .4px;
 }
 
-#project-autocomplete.filtered li,
+.project-autocomplete.filtered li,
 #tag-autocomplete.filtered li {
   display: none;
 }
 
-#project-autocomplete.filtered li.filter,
+.project-autocomplete.filtered li.filter,
 #tag-autocomplete.filtered li.filter {
   display: flex;
 }
@@ -193,7 +193,7 @@ li.selected-project span.task-count {
   cursor: pointer;
 }
 
-#project-autocomplete li.selected-project,
+.project-autocomplete li.selected-project,
 #tag-autocomplete .tag-list li.selected-tag {
   background-color: var(--active-selection);
   color: var(--active-font-color) !important;
@@ -242,7 +242,7 @@ li.selected-project span.task-count {
   padding-right: 80px !important;
 }
 
-#project-autocomplete .task-count {
+.project-autocomplete .task-count {
   color: #a3a3a3;
   cursor: pointer;
   flex: 1;
@@ -250,19 +250,19 @@ li.selected-project span.task-count {
   user-select: none;
 }
 
-#project-autocomplete ul.task-list {
+.project-autocomplete ul.task-list {
   display: none;
   width: 100%;
 }
 
-#project-autocomplete .tasklist-opened ul.task-list {
+.project-autocomplete .tasklist-opened ul.task-list {
   background-color: var(--main-bg-color);
   box-shadow: inset 0 1px 0 0 var(--border-color), inset 0 -1px 0 0 var(--border-color);
   height: auto;
   display: block;
 }
 
-#project-autocomplete .task-item {
+.project-autocomplete .task-item {
   padding-left: 10px;
   color: var(--font-color);
   height: 30px;
@@ -273,15 +273,15 @@ li.selected-project span.task-count {
   text-overflow: ellipsis;
   overflow: hidden;
 }
-#project-autocomplete .task-item:hover {
+.project-autocomplete .task-item:hover {
   background-color: hsla(0,0%,69.4%,.07);
 }
 
-#project-autocomplete .tasklist-opened {
+.project-autocomplete .tasklist-opened {
   height: auto !important;
 }
 
-#project-autocomplete .tasklist-opened ul li.task-item {
+.project-autocomplete .tasklist-opened ul li.task-item {
   display: block;
 
 }

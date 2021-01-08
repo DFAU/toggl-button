@@ -9,7 +9,7 @@ const hasExistingGroup = (entry: Toggl.TimeEntry) => ([te]: Toggl.TimeEntry[]) =
   return isSameDay(te.begin, entry.begin) &&
     te.description === entry.description &&
     te.project === entry.project &&
-    te.tid === entry.tid &&
+    te.activity === entry.activity &&
     te.wid === entry.wid &&
     (te.tags || []).join(',') === (entry.tags || []).join(',') &&
     te.billable === entry.billable;

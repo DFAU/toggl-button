@@ -64,7 +64,7 @@ declare module Toggl {
     uid: number;
     tags: string[] | null;
     project?: number;
-    tid?: number;
+    activity?: number;
   }
   export interface CSVUpload {
     at: string;

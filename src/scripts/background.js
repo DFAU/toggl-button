@@ -73,7 +73,7 @@ window.TogglButton = {
   $version: process.env.VERSION,
   queue: [],
   $editForm:
-    '<div id="toggl-button-edit-form">' +
+    '<div id="toggl-button-edit-form" class="toggl-button-form">' +
     '<form autocomplete="off">' +
     '<a class="toggl-button toggl-button-edit-form-button {service} active" href="javascript:void(0)">' +
     togglButtonSVG +
@@ -99,7 +99,7 @@ window.TogglButton = {
           <div class="TB__Popdown__filterContainer">
             <input name="toggl-button-project-filter" type="text" id="toggl-button-project-filter" class="TB__Popdown__filter" value="" placeholder="Find project..." autocomplete="off">
           </div>
-          <div id="project-autocomplete">{projects}</div>
+          <div id="project-autocomplete" class="project-autocomplete">{projects}</div>
         </div>
       </div>
     </div>
@@ -137,6 +137,67 @@ window.TogglButton = {
       <div class="tb-actions-button-group">
         <button type="button" id="tb-edit-form-cancel" tabindex="0" class="TB__Secondary__button">Cancel</button>
         <div id="toggl-button-delete" tabindex="0" class="TB__Button__button danger">Delete</div>
+      </div>
+    ` +
+    '<input type="submit" class="toggl-button-hidden">' +
+    '</form>' +
+    '</div>',
+
+  $newForm:
+    '<div id="toggl-button-new-form" class="toggl-button-form">' +
+    '<form autocomplete="off">' +
+    '<a id="toggl-button-hide"></a>' +
+
+    `<div class="TB__Dialog__field">
+      <div><input name="toggl-button-description" type="text" id="toggl-button-description" class="TB__Input" value="" placeholder="What are you doing?" autocomplete="off" /></div>
+    </div>` +
+
+    `
+    <div class="TB__Dialog__field" tabindex="0">
+      <div>
+        <div id="toggl-button-project-placeholder" class="TB__FormFieldTrigger__trigger" disabled><span class="tb-project-bullet"><div>No project</div></span><span class="TB__Popdown__caret"></span></div>
+        <div class="TB__Popdown__overlay"></div>
+        <div class="TB__Popdown__content">
+          <div class="TB__Popdown__filterContainer">
+            <input name="toggl-button-project-filter" type="text" id="toggl-button-project-filter" class="TB__Popdown__filter" value="" placeholder="Find project..." autocomplete="off">
+          </div>
+          <div id="project-autocomplete" class="project-autocomplete">{projects}</div>
+        </div>
+      </div>
+    </div>
+    ` +
+
+    `
+    <div class="TB__Dialog__field" tabindex="0">
+      <div>
+        <div id="toggl-button-tag-placeholder" class="TB__FormFieldTrigger__trigger" disabled><div>Add tags</div><span class="TB__Popdown__caret"></span></div>
+        <div class="TB__Popdown__overlay"></div>
+        <div class="TB__Popdown__content">
+          <div class="TB__Popdown__filterContainer">
+            <input name="toggl-button-tag-filter" type="text" id="toggl-button-tag-filter" class="TB__Popdown__filter" value="" placeholder="Find tags..." autocomplete="off">
+          </div>
+          <div id="tag-autocomplete">
+            <div class="tag-clear">Clear selected tags</div>
+            <a href="javascript:void(0)" class="add-new-tag">+ Add tag "<span></span>"</a>
+            {tags}
+          </div>
+        </div>
+      </div>
+    </div>
+    ` +
+
+    '<div class="TB__Dialog__field">' +
+    '<div class="tb-billable {billable}">' +
+    '<div class="toggl-button-billable-label">Billable</div>' +
+    '<div class="toggl-button-billable-flag"><span></span></div>' +
+    '</div>' +
+    '</div>' +
+    `
+      <div class="tb-actions-button-group">
+        <button type="button" id="tb-edit-form-cancel" tabindex="0" class="TB__Secondary__button">Cancel</button>
+        <div id="toggl-button-start" tabindex="0" class="TB__Button__button">Start</div>
+      </div>
+      <div class="tb-actions-button-group">
       </div>
     ` +
     '<input type="submit" class="toggl-button-hidden">' +
@@ -1218,6 +1279,16 @@ window.TogglButton = {
       return '';
     }
     return TogglButton.$editForm
+      .replace('{projects}', TogglButton.fillProjects())
+      .replace('{tags}', TogglButton.fillTags())
+      .replace('{billable}', TogglButton.setupBillable());
+  },
+
+  getNewForm: function () {
+    if (!TogglButton.$user) {
+      return '';
+    }
+    return TogglButton.$newForm
       .replace('{projects}', TogglButton.fillProjects())
       .replace('{tags}', TogglButton.fillTags())
       .replace('{billable}', TogglButton.setupBillable());

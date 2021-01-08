@@ -163,7 +163,9 @@ p.form-row.first {
   display: none;
 }
 
-.header[data-view='toggl-button-entry-form'] ~ .views #toggl-button-entry-form {
+.header[data-view='toggl-button-entry-form'] ~ .views #toggl-button-entry-form,
+.header[data-view='toggl-button-new-form'] ~ .views #toggl-button-new-form
+{
   display: flex !important;
   align-items: flex-start;
   justify-content: center;
@@ -213,7 +215,7 @@ p.form-row.first {
   height: 100%;
 }
 
-.views #toggl-button-edit-form {
+.views .toggl-button-form {
   /* Bigger width in the toolbar popup. It'll be changed completely in "Timer popup" issue. */
   position: relative;
   margin: 0 auto;
