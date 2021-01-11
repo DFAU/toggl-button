@@ -151,7 +151,6 @@ window.TogglButton = {
     `<div class="TB__Dialog__field">
       <div><input name="toggl-button-description" type="text" id="toggl-button-description" class="TB__Input" value="" placeholder="What are you doing?" autocomplete="off" /></div>
     </div>` +
-
     `
     <div class="TB__Dialog__field" tabindex="0">
       <div>
@@ -180,6 +179,9 @@ window.TogglButton = {
       </div>
     </div>
     ` +
+    `<div class="TB__Dialog__field">
+      <div><input name="toggl-button-card" type="text" id="toggl-button-card" class="TB__Input" value="" placeholder="Card" autocomplete="off" /></div>
+    </div>` +
     `
     <div class="TB__Dialog__field" tabindex="0">
       <div>
@@ -217,11 +219,10 @@ window.TogglButton = {
     '</form>' +
     '</div>',
 
-  fetchUser: function (credentials) {
+  fetchUser: function () {
     bugsnagClient.leaveBreadcrumb('Fetching user with related data');
     return new Promise((resolve, reject) => {
       TogglButton.ajax('/users/me', {
-        credentials: credentials,
         baseUrl: TogglButton.$ApiUrl,
         onLoad: async function (xhr) {
           let resp;
@@ -831,18 +832,11 @@ window.TogglButton = {
     const baseUrl = opts.baseUrl || TogglButton.$ApiUrl;
     const resolvedUrl = baseUrl + url;
 
-    const credentials = opts.credentials || TogglButton.getStoredCredentials();
-
-    console.log('execute xhr request... for ' + resolvedUrl);
-
     xhr.open(method, resolvedUrl, true);
     xhr.setRequestHeader('IsTogglButton', 'true');
 
     if (resolvedUrl.match(TogglButton.$ApiUrl)) {
-      if (credentials) {
-        xhr.setRequestHeader('X-AUTH-USER', credentials.username);
-        xhr.setRequestHeader('X-AUTH-TOKEN', credentials.password);
-      }
+      xhr.setRequestHeader('X-AUTH-SESSION', true);
     }
 
     if (opts.onError) {
@@ -1213,23 +1207,6 @@ window.TogglButton = {
     browser.browserAction.setIcon({ path: imagePath });
   },
 
-  storeCredentials: function (credentials) {
-    localStorage.setItem('username', credentials.username);
-    localStorage.setItem('password', credentials.password);
-  },
-
-  getStoredCredentials: function () {
-    return {
-      username: localStorage.getItem('username'),
-      password: localStorage.getItem('password')
-    };
-  },
-
-  removeStoredCredentials: function () {
-    localStorage.removeItem('username');
-    localStorage.setItem('password');
-  },
-
   loginUser: function (request) {
     let error;
     return new Promise((resolve, reject) => {
@@ -1237,7 +1214,6 @@ window.TogglButton = {
         method: 'GET',
         onLoad: function (xhr) {
           if (xhr.status === 200) {
-            TogglButton.storeCredentials(request);
             TogglButton.fetchUser()
               .then((response) => {
                 TogglButton.refreshPage();
@@ -1274,7 +1250,6 @@ window.TogglButton = {
   logoutUser: function () {
     TogglButton.$user = null;
     TogglButton.updateTriggers(null);
-    TogglButton.removeStoredCredentials();
     TogglButton.setBrowserActionBadge();
     TogglButton.refreshPageLogout();
   },
@@ -2124,7 +2099,7 @@ window.TogglButton = {
             .then(resolve);
         } else if (request.type === 'userToken') {
           if (!TogglButton.$user) {
-            TogglButton.fetchUser(request.credentials);
+            TogglButton.fetchUser();
           }
         } else if (request.type === 'currentEntry') {
           resolve({

@@ -1,6 +1,7 @@
 import * as React from 'react';
 import { Global, css } from '@emotion/core';
 import styled from '@emotion/styled';
+import browser from 'webextension-polyfill';
 
 import bugsnagClient from '../lib/bugsnag';
 import { sendMessage } from '../lib/messaging';
@@ -50,7 +51,7 @@ async function login (setState: React.Dispatch<React.SetStateAction<LoginState>>
   });
 }
 
-export default function LoginPage ({ source, isLoggedIn}: LoginProps) {
+export default function LoginPage ({ source, isLoggedIn, isPopup }: LoginProps) {
   const [ state, setState ] = React.useState<LoginState>({ loading: false, error: null, loggedIn: isLoggedIn });
   const { loading, error, loggedIn } = state;
 
@@ -77,17 +78,10 @@ export default function LoginPage ({ source, isLoggedIn}: LoginProps) {
     <Content style={{ height: '100%' }}>
       <Row>
         <Heading>Nearly there!</Heading>
+        <Subheading>Click the button below to login to your Punch In account</Subheading>
       </Row>
       <Row>
-        <a href="login.html?source=install" style={{ marginBottom: 21 }}>
-          <Button>Try again</Button>
-        </a>
-        <Subheading>or log in directly</Subheading>
-        <LoginForm
-          onSubmit={performLogin}
-          onSuccess={onLoginSuccess}
-          onError={onLoginError}
-        />
+        <LoginButton isPopup={isPopup} />
       </Row>
     </Content>
   );
@@ -198,6 +192,17 @@ function HeaderLinks ({ loggedIn }: Pick<LoginState, 'loggedIn'>) {
     </Links>
   );
 }
+
+function LoginButton ({ isPopup }: Pick<LoginProps, 'isPopup'>) {
+  const url = `${process.env.TOGGL_WEB_HOST}/de/login/`;
+  return (
+    isPopup
+    ? <a href='#' onClick={openPage(url)}><Button>Login</Button></a>
+    : <a href={url}><Button>Login</Button></a>
+  );
+}
+
+const openPage = (url: string) => () => browser.tabs.create({ url });
 
 const performLogin = (username: string, password: string) => (
   sendMessage({ type: 'login', username, password })

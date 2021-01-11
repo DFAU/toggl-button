@@ -45,7 +45,7 @@ const getTimeEntryDayGroups = (timeEntries: Array<Array<Toggl.TimeEntry>>): {[da
 
 const TimeEntriesFooter = () => (
   <Footer>
-    <a target="_blank" href="https://punch-in.dfau.de/app/timer?utm_source=toggl-button&utm_medium=referral">
+    <a target="_blank" href="https://punch-in.dfau.de/de/timesheet/">
       <MoreButton>
         See more on <strong>punch-in.dfau.de</strong>
       </MoreButton>
