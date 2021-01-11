@@ -1,6 +1,6 @@
 {
-  "name": "Toggl Track: Productivity & Time Tracker",
-  "short_name": "Toggl Track",
+  "name": "DFAU Track: Productivity & Time Tracker",
+  "short_name": "DFAU Track",
   "minimum_chrome_version": "63",
   "manifest_version": 2,
   "description":

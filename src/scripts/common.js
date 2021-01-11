@@ -539,12 +539,9 @@ window.togglbutton = {
 
         togglbutton.element = e.currentTarget;
 
-        browser.runtime
-          // Stop current time entry before starting a new one
-          .then(() => browser.runtime.sendMessage(opts))
+        browser.runtime.sendMessage(opts)
           .then(togglbutton.addEditForm);
       } else {
-        togglbutton.activateTimerLink(link);
         togglbutton.element = e.currentTarget;
         opts = {
           type: 'newTimeEntry',
@@ -718,7 +715,7 @@ window.togglbutton = {
       togglButtonCard.value = cardUrl;
 
       projectAutocomplete.setup(pid, null);
-      taskAutocomplete.setup(tid);
+      taskAutocomplete.setup(tid, pid);
       tagAutocomplete.setup(tags, 0);
       togglbutton.setupBillable(!!response.entry.billable, pid);
 
@@ -761,35 +758,53 @@ window.togglbutton = {
     };
 
     const submitForm = function (that) {
-      const selected = projectAutocomplete.getSelected();
+      const selectedProject = projectAutocomplete.getSelected();
+      const selectedTask = taskAutocomplete.getSelected();
 
       const billable = !!document.querySelector(
         '.tb-billable.tb-checked:not(.no-billable)'
       );
 
+      if (selectedProject.pid <= 0) {
+        alert('Select Project');
+        return;
+      }
+      if (selectedTask.tid === null) {
+        alert('Select Task');
+        return;
+      }
+
       const request = {
         type: 'timeEntry',
         description: $('#toggl-button-description').value,
-        pid: selected.pid,
-        projectName: selected.name,
+        project: selectedProject.pid,
+        projectName: selectedProject.name,
         tags: tagAutocomplete.getSelected(),
-        tid: taskAutocomplete.getSelected(),
-        metadata: [
+        activity: selectedTask.tid,
+        metaFields: [
           {
             name: 'kimai2_plugin',
-            value: response.entry.task
+            value: $('.toggl-button-card').value
           }
         ],
         billable: billable,
         service: togglbutton.serviceName
       };
       browser.runtime.sendMessage(request);
+
+      console.log(togglbutton.element);
+      togglbutton.activateTimerLink(togglbutton.element);
+
       closeForm();
     };
 
     // Fill in data if edit form was not present
     togglButtonDescription = $('#toggl-button-description', newForm);
     togglButtonDescription.value = response.entry.description || '';
+
+    togglButtonCard = $('.toggl-button-card');
+    togglButtonCard.value = cardUrl;
+
     setCursorAtBeginning(togglButtonDescription);
     projectAutocomplete.setup(pid, 0);
     taskAutocomplete.setProjectId(pid);
@@ -807,7 +822,7 @@ window.togglbutton = {
       submitForm(this);
     });
 
-    $('#toggl-button-update').addEventListener('keydown', function (e) {
+    $('#toggl-button-start').addEventListener('keydown', function (e) {
       if (e.code === 'Enter' || e.code === 'Space') {
         submitForm(this);
       }
@@ -848,7 +863,7 @@ window.togglbutton = {
 
     function closeOnClickOutside (e) {
       if (newForm.style.display !== 'none') {
-        const editFormPopup = document.getElementById('toggl-button-edit-form');
+        const editFormPopup = document.getElementById('toggl-button-new-form');
         if (!editFormPopup.contains(e.target)) {
           closeForm();
           return false;
@@ -860,6 +875,10 @@ window.togglbutton = {
 
     /* prevent certain host webapps from processing key commands */
     $('form', newForm).addEventListener('keydown', function (e) {
+      e.stopPropagation();
+    });
+
+    $('form', newForm).addEventListener('click', function (e) {
       e.stopPropagation();
     });
 
@@ -893,7 +912,7 @@ window.togglbutton = {
     projectAutocomplete.onChange(function (selected) {
       const project = togglbutton.findProjectByPid(selected.pid);
 
-      const wid = project ? project.wid : response.entry.wid;
+      const wid = project ? project.wid : 0;
 
       tagAutocomplete.setWorkspaceId(wid);
       taskAutocomplete.setProjectId(project);
