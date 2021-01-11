@@ -429,6 +429,12 @@ const Popup = {
         request.duration = -1 * Math.floor(start.getTime() / 1000);
       }
     }
+    request.metaFields = [
+      {
+        name: 'kimai2_plugin',
+        value: this.$editView.querySelector('.toggl-button-card').value
+      }
+    ];
 
     PopUp.sendMessage(request);
     PopUp.switchView(PopUp.$menuView);

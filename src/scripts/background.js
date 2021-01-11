@@ -1132,11 +1132,18 @@ window.TogglButton = {
           method: 'PATCH',
           payload: entry,
           baseUrl: TogglButton.$ApiUrl,
-          onLoad: function (xhr) {
+          onLoad: async function (xhr) {
             const success = xhr.status === 200;
             try {
               if (success) {
                 entry = JSON.parse(xhr.responseText);
+
+                if (timeEntry.metaFields) {
+                  for (const metaField of timeEntry.metaFields) {
+                    await TogglButton.updateTimeEntryMetaFields(timeEntryId, metaField);
+                  }
+                }
+
                 // Not using TogglButton.updateCurrent as the time is not changed
                 if (isRunningEntry) {
                   TogglButton.$curEntry = entry;
