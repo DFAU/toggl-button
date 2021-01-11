@@ -28,6 +28,7 @@ const Popup = {
   $popUpButton: null,
   $errorLabel: document.querySelector('.error'),
   $projectAutocomplete: null,
+  $taskAutocomplete: null,
   $tagAutocomplete: null,
   $timer: null,
   $tagsVisible: false,
@@ -219,6 +220,9 @@ const Popup = {
     const togglButtonDescription = document.querySelector(
       '#toggl-button-description'
     );
+
+    const toggleButtonCard = this.$editView.querySelector('.toggl-button-card');
+
     const togglButtonDuration = document.querySelector('#toggl-button-duration');
     const isCurrentEntry = TogglButton.$curEntry && TogglButton.$curEntry.id === timeEntry.id;
 
@@ -235,10 +239,13 @@ const Popup = {
       new Date(timeEntry.begin)
     );
     togglButtonDescription.value = timeEntry.description || '';
+    toggleButtonCard.value = timeEntry.metaFields ? timeEntry.metaFields[0].value : '';
+
     togglButtonDuration.value = secToHhmmImproved(duration, { html: false });
 
-    PopUp.$projectAutocomplete.setup(pid, tid);
+    PopUp.$projectAutocomplete.setup(pid, null);
     PopUp.$tagAutocomplete.setup(timeEntry.tags, wid);
+    Popup.$taskAutocomplete.setup(tid, pid);
 
     PopUp.setupBillable(!!timeEntry.billable, pid);
     PopUp.switchView(PopUp.$editView);
@@ -354,15 +361,10 @@ const Popup = {
     PopUp.$billable.classList.toggle('tb-checked', billable);
   },
 
-  addTimeEntry: function (selected, tags) {
-    alert('add Time Entry...');
-
+  addTimeEntry: function (timeEntry) {
     const request = {
+      ...timeEntry,
       type: 'timeEntry',
-      description: this.$newView.querySelector('#toggl-button-description').value,
-      project: selected.pid,
-      activity: selected.tid,
-      tags: tags,
       service: 'dropdown',
       respond: true
     };
@@ -461,6 +463,14 @@ const Popup = {
       PopUp,
       this.$editView
     );
+
+    Popup.$taskAutocomplete = new TaskAutoComplete(
+      'task',
+      'li',
+      Popup,
+      this.$editView
+    );
+
     PopUp.$tagAutocomplete = new TagAutoComplete('tag', 'li', PopUp, this.$editView);
     PopUp.$billable = document.querySelector('.tb-billable');
 
@@ -529,8 +539,8 @@ const Popup = {
       const project = TogglButton.findProjectByPid(selected.pid);
 
       const wid = project ? project.wid : TogglButton.$curEntry.wid;
-
       PopUp.$tagAutocomplete.setWorkspaceId(wid);
+      Popup.$taskAutocomplete.setProjectId(selected.pid);
     });
 
     PopUp.$billable.addEventListener('click', function () {
@@ -601,43 +611,43 @@ const Popup = {
       }
     });
 
+    const handleSubmit = (e) => {
+      e.preventDefault();
+      const selectedProject = projectDropdown.getSelected();
+      const selectedTask = taskDropdown.getSelected();
+      if (selectedProject.pid <= 0) {
+        alert('Select Project');
+        return;
+      }
+      if (selectedTask.tid === null) {
+        alert('Select Task');
+        return;
+      }
+
+      selectedProject.tid = selectedTask.tid;
+      const timeEntry = {
+        project: selectedProject.pid,
+        activity: selectedTask.tid,
+        description: this.$newView.querySelector('#toggl-button-description').value,
+        tags: tagsInput.getSelected(),
+        metaFields: [
+          {
+            name: 'kimai2_plugin',
+            value: this.$newView.querySelector('.toggl-button-card').value
+          }
+        ]
+      };
+
+      PopUp.addTimeEntry(timeEntry);
+    };
+
     PopUp.$newView
       .querySelector('#toggl-button-start')
-      .addEventListener('click', function (e) {
-        const selectedProject = projectDropdown.getSelected();
-        const selectedTask = taskDropdown.getSelected();
-        if (selectedProject.pid <= 0) {
-          alert('Select Project');
-          return;
-        }
-        if (selectedTask.tid === null) {
-          alert('Select Task');
-          return;
-        }
-
-        selectedProject.tid = selectedTask.tid;
-        PopUp.addTimeEntry(selectedProject, tagsInput.getSelected());
-      });
+      .addEventListener('click', handleSubmit);
 
     PopUp.$newView
       .querySelector('form')
-      .addEventListener('submit', function (e) {
-        e.preventDefault();
-
-        const selectedProject = projectDropdown.getSelected();
-        const selectedTask = taskDropdown.getSelected();
-        if (selectedProject.pid <= 0) {
-          alert('Select Project');
-          return;
-        }
-        if (selectedTask.tid === null) {
-          alert('Select Task');
-          return;
-        }
-
-        selectedProject.tid = selectedTask.tid;
-        PopUp.addTimeEntry(selectedProject, tagsInput.getSelected());
-      });
+      .addEventListener('submit', handleSubmit);
   },
 
   handleBackgroundMessage: function (request) {

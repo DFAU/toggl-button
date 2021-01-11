@@ -881,9 +881,13 @@ export const TaskAutoComplete = function (el, item, elem, container) {
 
 inheritsFrom(TaskAutoComplete, AutoComplete);
 
-TaskAutoComplete.prototype.setup = function (selected, pid) {
-  this.setSelected(selected);
+TaskAutoComplete.prototype.setup = function (tid, pid) {
   this.setProjectId(pid);
+
+  const selectedElement = this.el.querySelector("li[data-tid='" + tid + "']");
+  if (selectedElement) {
+    this.selectTask(selectedElement, true);
+  }
 };
 
 TaskAutoComplete.prototype.setProjectId = function (pid) {

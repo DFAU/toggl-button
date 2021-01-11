@@ -104,7 +104,22 @@ window.TogglButton = {
       </div>
     </div>
     ` +
-
+    `<div class="TB__Dialog__field" tabindex="0">
+      <div>
+        <div id="toggl-button-task-placeholder" class="TB__FormFieldTrigger__trigger" disabled><span class="tb-task-bullet"><div>No task</div></span><span class="TB__Popdown__caret"></span></div>
+        <div class="TB__Popdown__overlay"></div>
+        <div class="TB__Popdown__content">
+          <div class="TB__Popdown__filterContainer">
+            <input name="toggl-button-task-filter" type="text" id="toggl-button-task-filter" class="TB__Popdown__filter" value="" placeholder="Find task..." autocomplete="off">
+          </div>
+          <div id="task-autocomplete" class="task-autocomplete">{tasks}</div>
+        </div>
+      </div>
+    </div>` +
+    `<div class="TB__Dialog__field">
+      <div><input name="toggl-button-card" type="text" class="toggl-button-card TB__Input" value="" placeholder="Card" autocomplete="off" /></div>
+    </div>
+    ` +
     `
     <div class="TB__Dialog__field" tabindex="0">
       <div>
@@ -180,8 +195,9 @@ window.TogglButton = {
     </div>
     ` +
     `<div class="TB__Dialog__field">
-      <div><input name="toggl-button-card" type="text" id="toggl-button-card" class="TB__Input" value="" placeholder="Card" autocomplete="off" /></div>
-    </div>` +
+      <div><input name="toggl-button-card" type="text" class="toggl-button-card TB__Input" value="" placeholder="Card" autocomplete="off" /></div>
+    </div>
+    ` +
     `
     <div class="TB__Dialog__field" tabindex="0">
       <div>
@@ -652,6 +668,12 @@ window.TogglButton = {
           try {
             if (success) {
               entry = JSON.parse(xhr.responseText);
+
+              if (timeEntry.metaFields) {
+                for (const metaField of timeEntry.metaFields) {
+                  await TogglButton.updateTimeEntryMetaFields(entry.id, metaField);
+                }
+              }
               TogglButton.localEntry = entry;
               TogglButton.updateTriggers(entry);
               db.bumpTrackedCount();
@@ -687,6 +709,28 @@ window.TogglButton = {
             success: false,
             type: 'New Entry'
           });
+        }
+      });
+    });
+  },
+
+  updateTimeEntryMetaFields: function (id, value) {
+    return new Promise((resolve) => {
+      TogglButton.ajax(`/timesheets/${id}/meta`, {
+        method: 'PATCH',
+        payload: value,
+        baseUrl: TogglButton.$ApiUrl,
+        onLoad: function (xhr) {
+          const success = xhr.status === 200;
+          try {
+            if (success) {
+              resolve({
+                success: true
+              });
+            }
+          } catch (e) {
+            report(e);
+          }
         }
       });
     });
@@ -1261,6 +1305,7 @@ window.TogglButton = {
     return TogglButton.$editForm
       .replace('{projects}', TogglButton.fillProjects())
       .replace('{tags}', TogglButton.fillTags())
+      .replace('{tasks}', TogglButton.fillTasks())
       .replace('{billable}', TogglButton.setupBillable());
   },
 
