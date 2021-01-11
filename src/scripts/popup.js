@@ -215,7 +215,7 @@ const Popup = {
   renderEditForm: function (timeEntry) {
     const pid = timeEntry.project || 0;
     const tid = timeEntry.activity || 0;
-    const wid = timeEntry.wid;
+    const wid = timeEntry.wid || 0;
     const togglButtonDescription = document.querySelector(
       '#toggl-button-description'
     );
