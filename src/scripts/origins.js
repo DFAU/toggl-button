@@ -643,8 +643,8 @@ export default {
     url: '*://waffle.io/*',
     name: 'Waffle'
   },
-  'wekan.io': {
-    url: '*://wekan.io/*',
+  'dev.dfau.de': {
+    url: '*://dev.dfau.de/*',
     name: 'Wekan'
   },
   'wordpress.com': {
