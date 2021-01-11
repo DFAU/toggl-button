@@ -1138,7 +1138,7 @@ window.TogglButton = {
           method: 'DELETE',
           baseUrl: TogglButton.$ApiUrl,
           onLoad: function (xhr) {
-            const success = xhr.status === 200;
+            const success = xhr.status === 204;
             if (success) {
               const timeEntryId = parseInt(timeEntry.id, 10);
               if (TogglButton.$curEntry && TogglButton.$curEntry.id === timeEntryId) {
