@@ -161,6 +161,9 @@ window.TogglButton = {
   $newForm:
     '<div id="toggl-button-new-form" class="toggl-button-form">' +
     '<form autocomplete="off">' +
+    '<a class="toggl-button toggl-button-edit-form-button {service} active" href="javascript:void(0)">' +
+    togglButtonSVG +
+    '<span>Start timer</span></a>' +
     '<a id="toggl-button-hide"></a>' +
 
     `<div class="TB__Dialog__field">
@@ -2123,6 +2126,12 @@ window.TogglButton = {
           if (request.respond) {
             resolve(res);
           }
+        } else if (request.type === 'newTimeEntry') {
+          const form = TogglButton.getNewForm();
+          resolve({
+            ...request,
+            html: form
+          });
         } else if (request.type === 'timeEntry') {
           TogglButton.createTimeEntry(request)
             .then((response) => {

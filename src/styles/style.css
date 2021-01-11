@@ -55,6 +55,9 @@
 .toggl-integration #toggl-button-duration-row {
   display: none;
 }
+.toggl-integration #tb-edit-form-cancel {
+  display: none;
+}
 
 .toggl-button-edit-form-button, .toggl-button-form .toggl-button-edit-form-button {
   display: inline-block !important;
@@ -105,6 +108,7 @@
 }
 
 #toggl-button-project-filter,
+#toggl-button-task-filter,
 #toggl-button-tag-filter {
   font-size: 13px !important;
   margin: 0 !important;

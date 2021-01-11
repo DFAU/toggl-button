@@ -1,9 +1,11 @@
-import { ProjectAutoComplete, TagAutoComplete } from './lib/autocomplete';
+import { ProjectAutoComplete, TagAutoComplete, TaskAutoComplete } from './lib/autocomplete';
 /* eslint-disable-next-line import/no-webpack-loader-syntax */
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
 const browser = require('webextension-polyfill');
 
-let projectAutocomplete; let tagAutocomplete;
+let projectAutocomplete;
+let tagAutocomplete;
+let taskAutocomplete;
 
 window.$ = (s, elem) => {
   elem = elem || document;
@@ -319,8 +321,9 @@ window.togglbutton = {
       togglButtonDescription = $('#toggl-button-description');
       togglButtonDescription.value = response.entry.description || '';
 
-      projectAutocomplete.setup(pid, tid);
-      tagAutocomplete.setup(response.entry.tags, response.entry.wid);
+      projectAutocomplete.setup(pid, null);
+      taskAutocomplete.setup(tid);
+      tagAutocomplete.setup(response.entry.tags, 0);
       togglbutton.setupBillable(!!response.entry.billable, pid);
 
       editForm.style.left = position.left + 'px';
@@ -351,8 +354,9 @@ window.togglbutton = {
     container.appendChild(editForm);
     togglbutton.$billable = $('.tb-billable', editForm);
 
-    projectAutocomplete = new ProjectAutoComplete('project', 'li', togglbutton);
-    tagAutocomplete = new TagAutoComplete('tag', 'li', togglbutton);
+    projectAutocomplete = new ProjectAutoComplete('project', 'li', togglbutton, container);
+    tagAutocomplete = new TagAutoComplete('tag', 'li', togglbutton, container);
+    taskAutocomplete = new TaskAutoComplete('task', 'li', togglbutton, container);
 
     const closeForm = function () {
       projectAutocomplete.closeDropdown();
@@ -532,28 +536,36 @@ window.togglbutton = {
           respond: true,
           service: togglbutton.serviceName
         };
+
+        togglbutton.element = e.currentTarget;
+
+        browser.runtime
+          // Stop current time entry before starting a new one
+          .then(() => browser.runtime.sendMessage(opts))
+          .then(togglbutton.addEditForm);
       } else {
         togglbutton.activateTimerLink(link);
+        togglbutton.element = e.currentTarget;
         opts = {
-          type: 'timeEntry',
+          type: 'newTimeEntry',
           respond: true,
-          projectId: invokeIfFunction(params.projectId),
-          description: invokeIfFunction(params.description),
-          tags: invokeIfFunction(params.tags),
-          projectName: invokeIfFunction(params.projectName),
+          entry: {
+            pid: invokeIfFunction(params.projectId),
+            projectName: invokeIfFunction(params.projectName),
+            description: invokeIfFunction(params.description),
+            tags: invokeIfFunction(params.tags)
+          },
           createdWith: togglbutton.fullVersion + '-' + togglbutton.serviceName,
           service: togglbutton.serviceName,
           url: window.location.href,
           container: params.container || ''
         };
+        browser.runtime
+          // Stop current time entry before starting a new one
+          .sendMessage({ type: 'stop' })
+          .then(() => browser.runtime.sendMessage(opts))
+          .then(togglbutton.addNewForm);
       }
-      togglbutton.element = e.currentTarget;
-
-      browser.runtime
-        // Stop current time entry before starting a new one
-        .sendMessage({ type: 'stop' })
-        .then(() => browser.runtime.sendMessage(opts))
-        .then(togglbutton.addEditForm);
 
       return false;
     });
@@ -678,6 +690,214 @@ window.togglbutton = {
       }
     }
     return undefined;
+  },
+
+  addNewForm: function (response) {
+    const pid = response.entry.pid || 0;
+    const tid = response.entry.tid || 0;
+    const tags = response.entry.tags || [];
+    const cardUrl = response.entry.card || document.location.href;
+
+    const editFormHeight = 300;
+    const editFormWidth = 360;
+    const div = document.createElement('div');
+    let newForm;
+    let togglButtonDescription;
+    let togglButtonCard;
+
+    const elemRect = togglbutton.element.getBoundingClientRect();
+    newForm = $('#toggl-button-new-form');
+    const position = togglbutton.topPosition(
+      elemRect, editFormWidth, editFormHeight);
+
+    if (newForm !== null) {
+      togglButtonDescription = $('#toggl-button-description');
+      togglButtonCard = $('.toggl-button-card');
+
+      togglButtonDescription.value = response.entry.description || '';
+      togglButtonCard.value = cardUrl;
+
+      projectAutocomplete.setup(pid, null);
+      taskAutocomplete.setup(tid);
+      tagAutocomplete.setup(tags, 0);
+      togglbutton.setupBillable(!!response.entry.billable, pid);
+
+      newForm.style.left = position.left + 'px';
+      newForm.style.top = position.top + 'px';
+      newForm.style.display = 'block';
+      setCursorAtBeginning(togglButtonDescription);
+      return;
+    }
+
+    div.innerHTML = response.html.replace('{service}', togglbutton.serviceName);
+    newForm = div.firstChild;
+    newForm.style.left = position.left + 'px';
+    newForm.style.top = position.top + 'px';
+    newForm.style.position = 'fixed';
+    newForm.classList.add('toggl-integration');
+
+    if (response.darkMode) {
+      newForm.classList.add('dark');
+    }
+
+    // Some integrations uses trap zones which prevents from focus everything inside this element
+    // See: https://github.com/theKashey/focus-lock
+    newForm.setAttribute('data-no-focus-lock', true);
+
+    // if a container was provided to createTimerlink, append editForm to that container
+    // for avoiding unwanted interactions with some services' events
+    const container = response.container ? document.querySelector(response.container) : document.body;
+    container.appendChild(newForm);
+    togglbutton.$billable = $('.tb-billable', newForm);
+
+    projectAutocomplete = new ProjectAutoComplete('project', 'li', togglbutton, container);
+    tagAutocomplete = new TagAutoComplete('tag', 'li', togglbutton, container);
+    taskAutocomplete = new TaskAutoComplete('task', 'li', togglbutton, container);
+
+    const closeForm = function () {
+      projectAutocomplete.closeDropdown();
+      tagAutocomplete.closeDropdown();
+      newForm.style.display = 'none';
+    };
+
+    const submitForm = function (that) {
+      const selected = projectAutocomplete.getSelected();
+
+      const billable = !!document.querySelector(
+        '.tb-billable.tb-checked:not(.no-billable)'
+      );
+
+      const request = {
+        type: 'timeEntry',
+        description: $('#toggl-button-description').value,
+        pid: selected.pid,
+        projectName: selected.name,
+        tags: tagAutocomplete.getSelected(),
+        tid: taskAutocomplete.getSelected(),
+        metadata: [
+          {
+            name: 'kimai2_plugin',
+            value: response.entry.task
+          }
+        ],
+        billable: billable,
+        service: togglbutton.serviceName
+      };
+      browser.runtime.sendMessage(request);
+      closeForm();
+    };
+
+    // Fill in data if edit form was not present
+    togglButtonDescription = $('#toggl-button-description', newForm);
+    togglButtonDescription.value = response.entry.description || '';
+    setCursorAtBeginning(togglButtonDescription);
+    projectAutocomplete.setup(pid, 0);
+    taskAutocomplete.setProjectId(pid);
+    tagAutocomplete.setSelected(response.entry.tags);
+    tagAutocomplete.setWorkspaceId(0);
+
+    togglbutton.setupBillable(!!response.entry.billable, pid);
+
+    // Data fill end
+    $('#toggl-button-hide', newForm).addEventListener('click', function (e) {
+      closeForm();
+    });
+
+    $('#toggl-button-start', newForm).addEventListener('click', function (e) {
+      submitForm(this);
+    });
+
+    $('#toggl-button-update').addEventListener('keydown', function (e) {
+      if (e.code === 'Enter' || e.code === 'Space') {
+        submitForm(this);
+      }
+    });
+
+    // Cancel button
+    $('#tb-edit-form-cancel', newForm).addEventListener('click', function (e) {
+      e.preventDefault();
+      closeForm();
+    });
+    $('#tb-edit-form-cancel').addEventListener('keydown', function (e) {
+      if (e.code === 'Enter' || e.code === 'Space') {
+        e.preventDefault();
+        closeForm();
+      }
+    });
+
+    $('form', newForm).addEventListener('submit', function (e) {
+      submitForm(this);
+      e.preventDefault();
+    });
+
+    $('.toggl-button', newForm).addEventListener('click', function (e) {
+      e.preventDefault();
+      const link = togglbutton.element;
+      link.classList.remove('active');
+      link.style.color = '';
+      if (!link.classList.contains('min')) {
+        setLinkText(link, 'Start Timer');
+      }
+      browser.runtime
+        .sendMessage({ type: 'stop' })
+        .then(togglbutton.addEditForm);
+
+      closeForm();
+      return false;
+    });
+
+    function closeOnClickOutside (e) {
+      if (newForm.style.display !== 'none') {
+        const editFormPopup = document.getElementById('toggl-button-edit-form');
+        if (!editFormPopup.contains(e.target)) {
+          closeForm();
+          return false;
+        }
+      }
+    }
+
+    document.addEventListener('click', closeOnClickOutside);
+
+    /* prevent certain host webapps from processing key commands */
+    $('form', newForm).addEventListener('keydown', function (e) {
+      e.stopPropagation();
+    });
+
+    togglbutton.$billable.addEventListener('click', function () {
+      this.classList.toggle('tb-checked');
+    });
+
+    togglbutton.$billable.addEventListener('keydown', function (e) {
+      let prevent = false;
+      if (e.code === 'Space') {
+        prevent = true;
+        this.classList.toggle('tb-checked');
+      }
+
+      if (e.code === 'ArrowLeft') {
+        prevent = true;
+        this.classList.toggle('tb-checked', false);
+      }
+
+      if (e.code === 'ArrowRight') {
+        prevent = true;
+        this.classList.toggle('tb-checked', true);
+      }
+
+      if (prevent) {
+        e.stopPropagation();
+        e.preventDefault();
+      }
+    });
+
+    projectAutocomplete.onChange(function (selected) {
+      const project = togglbutton.findProjectByPid(selected.pid);
+
+      const wid = project ? project.wid : response.entry.wid;
+
+      tagAutocomplete.setWorkspaceId(wid);
+      taskAutocomplete.setProjectId(project);
+    });
   }
 };
 
