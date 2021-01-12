@@ -388,7 +388,8 @@ const Popup = {
       return;
     }
 
-    const selected = PopUp.$projectAutocomplete.getSelected();
+    const selectedProject = PopUp.$projectAutocomplete.getSelected();
+    const selectedTask = Popup.$taskAutocomplete.getSelected();
     const billable = !!document.querySelector(
       '.tb-billable.tb-checked:not(.no-billable)'
     );
@@ -396,9 +397,9 @@ const Popup = {
     const request = {
       type: 'update',
       description: document.querySelector('#toggl-button-description').value,
-      project: selected.project,
+      project: selectedProject.pid,
       tags: PopUp.$tagAutocomplete.getSelected(),
-      activity: selected.activity,
+      activity: selectedTask.tid,
       respond: true,
       billable: billable,
       service: 'dropdown'
