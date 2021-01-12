@@ -46,7 +46,6 @@ declare module Toggl {
     actual_hours: number;
     rate: number;
     currency: string;
-    color: string;
     server_deleted_at?: string;
     estimated_hours?: number;
     guid?: string;
