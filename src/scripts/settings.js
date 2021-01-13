@@ -5,7 +5,6 @@ import bugsnagClient from './lib/bugsnag';
 import { getStoreLink, getUrlParam, isActiveUser } from './lib/utils';
 
 let TogglButton = browser.extension.getBackgroundPage().TogglButton;
-const ga = browser.extension.getBackgroundPage().ga;
 const db = browser.extension.getBackgroundPage().db;
 const FF = navigator.userAgent.indexOf('Chrome') === -1;
 
@@ -198,8 +197,6 @@ const Settings = {
       document.querySelector('.field.stop-at-day-end').classList.toggle('field--showDetails', stopAtDayEnd);
 
       Settings.fillDefaultProject();
-
-      ga.reportSettings();
 
       Settings.loadSitesIntoList();
     } catch (e) {

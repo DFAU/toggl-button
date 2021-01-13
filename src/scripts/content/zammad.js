@@ -42,16 +42,11 @@ function descriptionSelector () {
  * @returns {string}
  */
 function projectSelector () {
-  const client = document.querySelectorAll('[data-tab="customer"] [title="Name"]');
   const organization = document.querySelectorAll('[data-tab="organization"] [title="Name"]');
-  let clientName = '';
-  if (client.length === 1) {
-    clientName = client[0].textContent.trim();
-  }
   if (organization.length === 1) {
-    clientName += ' (' + organization[0].textContent.trim() + ')';
+    return organization[0].textContent.trim() + ' Support';
   }
-  return clientName;
+  return '';
 }
 
 function tagsSelector () {

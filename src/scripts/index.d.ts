@@ -35,6 +35,8 @@ declare module Toggl {
     wid: number;
     customer: number;
     name: string;
+    parentTitle: string;
+    combinedName: string;
     billable: boolean;
     is_private: boolean;
     visible: boolean;

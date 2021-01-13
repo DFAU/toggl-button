@@ -4,7 +4,6 @@ import bugsnagClient from './lib/bugsnag';
 import { escapeHtml, isTogglURL, report, secToHHMM } from './lib/utils';
 import { renderTimeEntries } from './lib/actions';
 import Db from './lib/db';
-import Ga from './lib/ga';
 import Sound from './lib/sound';
 /* eslint-disable-next-line import/no-webpack-loader-syntax */
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
@@ -272,6 +271,7 @@ window.TogglButton = {
                     if (project.visible) {
                       // workaround due to missing workspaces
                       project.wid = 0;
+                      project.combinedName = project.parentTitle + ' ' + project.name;
                       projectMap[project.name + project.id] = project;
                     }
                   });
@@ -575,7 +575,7 @@ window.TogglButton = {
       for (key in TogglButton.$user.projectMap) {
         if (
           TogglButton.$user.projectMap.hasOwnProperty(key) &&
-          TogglButton.$user.projectMap[key].name === name
+          TogglButton.$user.projectMap[key].combinedName === name
         ) {
           result = TogglButton.$user.projectMap[key];
           if (result.wid === TogglButton.$user.default_wid) {
@@ -1137,6 +1137,7 @@ window.TogglButton = {
           baseUrl: TogglButton.$ApiUrl,
           onLoad: async function (xhr) {
             const success = xhr.status === 200;
+            alert('updated time entry' + xhr.status + xhr.responseText);
             try {
               if (success) {
                 entry = JSON.parse(xhr.responseText);
@@ -2127,6 +2128,12 @@ window.TogglButton = {
             resolve(res);
           }
         } else if (request.type === 'newTimeEntry') {
+          const timeEntry = request.entry;
+          if (timeEntry.projectName && !timeEntry.project) {
+            const project = TogglButton.findProjectByName(timeEntry.projectName);
+            request.entry.pid = (project && project.id) || null;
+          }
+
           const form = TogglButton.getNewForm();
           resolve({
             ...request,
@@ -2402,7 +2409,6 @@ browser.webRequest.onBeforeSendHeaders.addListener(
 );
 
 window.db = new Db(TogglButton);
-window.ga = new Ga(db);
 
 TogglButton.queue.push(TogglButton.startAutomatically);
 db.get('showRightClickButton')
