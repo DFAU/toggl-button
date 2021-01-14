@@ -19,6 +19,8 @@ type Project = {
   name: string;
 };
 
+type MetaFields = {name: string, value: string|null}[];
+
 type IdMap<T> = {
   [index: string]: T
 }
@@ -51,6 +53,7 @@ declare module Toggl {
     server_deleted_at?: string;
     estimated_hours?: number;
     guid?: string;
+    metaFields: MetaFields
   }
   export interface TimeEntry {
     id: number;
@@ -66,6 +69,7 @@ declare module Toggl {
     tags: string[] | null;
     project?: number;
     activity?: number;
+    metaFields: MetaFields
   }
   export interface CSVUpload {
     at: string;
