@@ -10,7 +10,7 @@ togglbutton.render(
     const togglLink = togglbutton.createTimerLink({
       className: 'zammad-toggle-btn',
       description: descriptionSelector,
-      projectName: projectSelector,
+      projectPredicate: projectPredicate,
       tags: tagsSelector,
       buttonType: 'minimal'
     });
@@ -39,14 +39,21 @@ function descriptionSelector () {
 
 /**
  * We take the client name as project if one is found and append the organization if the client is assigned
- * @returns {string}
+ * @returns {Object}
  */
-function projectSelector () {
+function projectPredicate () {
   const organization = document.querySelectorAll('[data-tab="organization"] [title="Name"]');
   if (organization.length === 1) {
-    return organization[0].textContent.trim() + ' Support';
+    return {
+      'metaFields': [
+        {
+          'name': 'dfau-support-org-name',
+          'value': organization[0].textContent.trim()
+        }
+      ]
+    };
   }
-  return '';
+  return {};
 }
 
 function tagsSelector () {

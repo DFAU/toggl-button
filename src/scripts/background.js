@@ -7,6 +7,11 @@ import Db from './lib/db';
 import Sound from './lib/sound';
 /* eslint-disable-next-line import/no-webpack-loader-syntax */
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
+import find from 'lodash.find';
+
+const _ = {
+  find
+};
 
 const FIVE_MINUTES = 5 * 60;
 
@@ -249,7 +254,6 @@ window.TogglButton = {
           const projectTaskList = {};
           const projectMap = {};
           let entry = null;
-
           try {
             if (xhr.status === 200) {
               browser.tabs.query({ active: true, currentWindow: true })
@@ -272,6 +276,18 @@ window.TogglButton = {
                       // workaround due to missing workspaces
                       project.wid = 0;
                       project.combinedName = project.parentTitle + ' ' + project.name;
+
+                      // todo: remove when https://code.dfau.de/dfau/kimai2-plugin/pulls/2 is deployed
+                      project.metaFields = [
+                        {
+                          'name': 'dfau-support-org-name',
+                          'value': project.parentTitle
+                        },
+                        {
+                          'name': 'dfau-devboard-name',
+                          'value': project.combinedName
+                        }
+                      ];
                       projectMap[project.name + project.id] = project;
                     }
                   });
@@ -347,6 +363,13 @@ window.TogglButton = {
           }
         },
         onError: function (xhr) {
+          bugsnagClient.notify(new Error(`Fetch user failed ${xhr.status}`), {
+            metaData: {
+              status: xhr.status,
+              responseText: xhr.responseText
+            }
+          });
+
           TogglButton.setBrowserActionBadge();
           resolve({
             success: false,
@@ -561,6 +584,17 @@ window.TogglButton = {
     if (!added) {
       TogglButton.$user.time_entries.push(TogglButton.$latestStoppedEntry);
     }
+  },
+
+  findProjectByPredicate: function (predicate) {
+    let result = null;
+    try {
+      alert(JSON.stringify(TogglButton.$user.projectMap));
+      result = _.find(TogglButton.$user.projectMap, predicate);
+    } catch (e) {
+      bugsnagClient.notify('Error in findProjectByPredicate', e);
+    }
+    return result;
   },
 
   findProjectByName: function (nameOrNames) {
@@ -2129,8 +2163,9 @@ window.TogglButton = {
           }
         } else if (request.type === 'newTimeEntry') {
           const timeEntry = request.entry;
-          if (timeEntry.projectName && !timeEntry.project) {
-            const project = TogglButton.findProjectByName(timeEntry.projectName);
+
+          if (timeEntry.projectPredicate && !timeEntry.project) {
+            const project = TogglButton.findProjectByPredicate(timeEntry.projectPredicate);
             request.entry.pid = (project && project.id) || null;
           }
 

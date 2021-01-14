@@ -549,7 +549,7 @@ window.togglbutton = {
           entry: {
             pid: invokeIfFunction(params.projectId),
             projectName: invokeIfFunction(params.projectName),
-            clientName: invokeIfFunction(params.clientName),
+            projectPredicate: invokeIfFunction(params.projectPredicate),
             description: invokeIfFunction(params.description),
             tags: invokeIfFunction(params.tags)
           },
