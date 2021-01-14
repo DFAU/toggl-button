@@ -1,7 +1,7 @@
 'use strict';
 /* global togglbutton, $ */
 
-// Zammad 3.1 add toggl button to the ticket controls
+// DFAU-Zammad 3.1 add toggl button to the ticket controls (based on zammad.js)
 togglbutton.render(
   '.ticketZoom-header:not(.toggl)',
   { observe: true },
@@ -10,7 +10,7 @@ togglbutton.render(
     const togglLink = togglbutton.createTimerLink({
       className: 'zammad-toggle-btn',
       description: descriptionSelector,
-      projectName: projectSelector,
+      projectPredicate: projectPredicate,
       tags: tagsSelector,
       buttonType: 'minimal'
     });
@@ -39,19 +39,21 @@ function descriptionSelector () {
 
 /**
  * We take the client name as project if one is found and append the organization if the client is assigned
- * @returns {string}
+ * @returns {Object}
  */
-function projectSelector () {
-  const client = document.querySelectorAll('[data-tab="customer"] [title="Name"]');
+function projectPredicate () {
   const organization = document.querySelectorAll('[data-tab="organization"] [title="Name"]');
-  let clientName = '';
-  if (client.length === 1) {
-    clientName = client[0].textContent.trim();
-  }
   if (organization.length === 1) {
-    clientName += ' (' + organization[0].textContent.trim() + ')';
+    return {
+      'metaFields': [
+        {
+          'name': 'dfau-support-org-name',
+          'value': organization[0].textContent.trim()
+        }
+      ]
+    };
   }
-  return clientName;
+  return {};
 }
 
 function tagsSelector () {

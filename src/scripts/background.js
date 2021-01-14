@@ -589,7 +589,6 @@ window.TogglButton = {
   findProjectByPredicate: function (predicate) {
     let result = null;
     try {
-      alert(JSON.stringify(TogglButton.$user.projectMap));
       result = _.find(TogglButton.$user.projectMap, predicate);
     } catch (e) {
       bugsnagClient.notify('Error in findProjectByPredicate', e);

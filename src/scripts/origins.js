@@ -1,4 +1,9 @@
 export default {
+  'support.dfau.de': {
+    url: '*://support.dfau.de/*',
+    name: 'DFAU-Support',
+    file: 'dfau-support.js'
+  },
   'agenocrm.com': {
     url: '*://*.agenocrm.com/*',
     name: 'AgenoCRM',
