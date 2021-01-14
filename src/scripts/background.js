@@ -8,6 +8,9 @@ import Sound from './lib/sound';
 /* eslint-disable-next-line import/no-webpack-loader-syntax */
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
 import find from 'lodash.find';
+import { ajax } from 'rxjs/ajax';
+import { map, take, tap, catchError, switchMap } from 'rxjs/operators';
+import { forkJoin, of } from 'rxjs';
 
 const _ = {
   find
@@ -244,181 +247,169 @@ window.TogglButton = {
 
   fetchUser: function () {
     bugsnagClient.leaveBreadcrumb('Fetching user with related data');
-    return new Promise((resolve, reject) => {
-      TogglButton.ajax('/users/me', {
-        baseUrl: TogglButton.$ApiUrl,
-        onLoad: async function (xhr) {
-          let resp;
-          const clientMap = {};
-          const clientNameMap = {};
-          const projectTaskList = {};
-          const projectMap = {};
-          let entry = null;
-          try {
-            if (xhr.status === 200) {
-              browser.tabs.query({ active: true, currentWindow: true })
-                .then(filterTabs(function (tabs) {
-                  browser.tabs.sendMessage(tabs[0].id, { type: 'sync' });
-                }));
-              resp = JSON.parse(xhr.responseText);
-              TogglButton.$user = resp;
-              // workaround due to missing workspaces
-              TogglButton.$user.default_wid = 0;
-              TogglButton.$user.workspaces = [{
-                id: 0,
-                name: 'default'
-              }];
 
-              await TogglButton.fetchData('/projects').then(
-                (projects) => {
-                  projects.forEach(function (project) {
-                    if (project.visible) {
-                      // workaround due to missing workspaces
-                      project.wid = 0;
-                      project.combinedName = project.parentTitle + ' ' + project.name;
-
-                      // todo: remove when https://code.dfau.de/dfau/kimai2-plugin/pulls/2 is deployed
-                      project.metaFields = [
-                        {
-                          'name': 'dfau-support-org-name',
-                          'value': project.parentTitle
-                        },
-                        {
-                          'name': 'dfau-devboard-name',
-                          'value': project.combinedName
-                        }
-                      ];
-                      projectMap[project.name + project.id] = project;
-                    }
-                  });
-                  TogglButton.$user.projectMap = projectMap;
-                  localStorage.setItem('projects', JSON.stringify(projectMap));
-                }
-              );
-
-              await TogglButton.fetchData('/customers').then(
-                (clients) => {
-                  clients.forEach(function (client) {
-                    // workaround due to missing workspaces
-                    client.wid = 0;
-                    clientMap[client.id] = client;
-                    clientNameMap[client.name.toLowerCase() + client.id] = client;
-                  });
-                  TogglButton.$user.clientMap = clientMap;
-                  TogglButton.$user.clientNameMap = clientNameMap;
-                  localStorage.setItem('clients', JSON.stringify(clientMap));
-                }
-              );
-
-              await TogglButton.fetchData('/activities').then(
-                (tasks) => {
-                  tasks.forEach(function (task) {
-                    // workaround due to missing workspaces
-                    task.wid = 0;
-                    const pid = task.project ? task.project : 0;
-                    if (!projectTaskList[pid]) {
-                      projectTaskList[pid] = [];
-                    }
-                    projectTaskList[pid].push(task);
-                  });
-                  TogglButton.$user.tasks = tasks;
-                  TogglButton.$user.projectTaskList = projectTaskList;
-                  localStorage.setItem('tasks', JSON.stringify(tasks));
-                }
-              );
-
-              await TogglButton.fetchData('/timesheets').then(
-                (timesheets) => {
-                  entry = timesheets.find(te => te.duration <= 0) || null;
-                  timesheets.forEach(function (timesheet) {
-                    // workaround due to missing workspaces
-                    timesheet.wid = 0;
-                  });
-
-                  TogglButton.$user.time_entries = timesheets;
-                  TogglButton.updateTriggers(entry);
-                }
-              );
-
-              resolve({ success: xhr.status === 200 });
-              TogglButton.setBrowserActionBadge();
-              TogglButton.updateBugsnag();
-              TogglButton.handleQueue();
-              TogglButton.setCanSeeBillable();
-            } else {
-              bugsnagClient.notify(new Error(`Fetch user failed ${xhr.status}`), {
-                metaData: {
-                  status: xhr.status,
-                  responseText: xhr.responseText
-                }
-              });
-              TogglButton.setBrowserActionBadge();
-              resolve({
-                success: false,
-                type: 'login',
-                error: `Fetch user failed ${xhr.status}`
-              });
-            }
-          } catch (e) {
-            report(e);
-          }
-        },
-        onError: function (xhr) {
-          bugsnagClient.notify(new Error(`Fetch user failed ${xhr.status}`), {
-            metaData: {
-              status: xhr.status,
-              responseText: xhr.responseText
-            }
-          });
-
-          TogglButton.setBrowserActionBadge();
-          resolve({
-            success: false,
-            type: 'login',
-            error: 'Connectivity error'
-          });
-        }
-      });
+    const additionalDataObservable = forkJoin({
+      projects: TogglButton.fetchProjects(),
+      clients: TogglButton.fetchClients(),
+      tasks: TogglButton.fetchTasks(),
+      timeEntries: TogglButton.fetchTimeEntries()
     });
+
+    return TogglButton.rxAjax('/users/me', {
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      catchError((error) => {
+        bugsnagClient.notify(new Error(`Fetch user failed ${error.status}`), {
+          metaData: {
+            status: error.status,
+            responseText: error.message
+          }
+        });
+        TogglButton.$user = null;
+        TogglButton.setBrowserActionBadge();
+        return of({
+          success: false,
+          type: 'login',
+          error: 'Connectivity error'
+        });
+      }),
+      take(1),
+      map(response => response.response),
+      tap(user => {
+        TogglButton.$user = user;
+        // workaround due to missing workspaces
+        TogglButton.$user.default_wid = 0;
+        TogglButton.$user.workspaces = [{
+          id: 0,
+          name: 'default'
+        }];
+      }),
+      switchMap(() => additionalDataObservable),
+      map(() => {
+        browser.tabs.query({ active: true, currentWindow: true })
+          .then(filterTabs(function (tabs) {
+            browser.tabs.sendMessage(tabs[0].id, { type: 'sync' });
+          }));
+
+        TogglButton.setBrowserActionBadge();
+        TogglButton.updateBugsnag();
+        TogglButton.handleQueue();
+        TogglButton.setCanSeeBillable();
+
+        return { success: true };
+      }),
+      catchError(error => {
+        bugsnagClient.notify(new Error(`Fetching additional data failed ${error.status}`), {
+          metaData: {
+            url: error.request.url,
+            status: error.status,
+            responseText: error.message
+          }
+        });
+        TogglButton.$user = null;
+        TogglButton.setBrowserActionBadge();
+        return of({
+          success: false,
+          type: 'login',
+          error: 'Connectivity error'
+        });
+      })
+    ).toPromise();
   },
 
-  fetchData: function (url) {
-    bugsnagClient.leaveBreadcrumb('Fetching Data');
-    return new Promise((resolve, reject) => {
-      TogglButton.ajax(url, {
-        baseUrl: TogglButton.$ApiUrl,
-        onLoad: function (xhr) {
-          try {
-            if (xhr.status === 200) {
-              resolve(JSON.parse(xhr.responseText));
-            } else {
-              bugsnagClient.notify(new Error(`Fetch data failed ${xhr.status}`), {
-                metaData: {
-                  status: xhr.status,
-                  responseText: xhr.responseText
-                }
-              });
-              TogglButton.setBrowserActionBadge();
-              resolve({
-                success: false,
-                type: 'data',
-                error: `Fetch data failed ${xhr.status}`
-              });
-            }
-          } catch (e) {
-            report(e);
+  fetchProjects () {
+    return TogglButton.rxAjax('/projects', {
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      tap(projects => {
+        const projectMap = {};
+        projects.forEach(function (project) {
+          if (project.visible) {
+            // workaround due to missing workspaces
+            project.wid = 0;
+            project.combinedName = project.parentTitle + ' ' + project.name;
+
+            // todo: remove when https://code.dfau.de/dfau/kimai2-plugin/pulls/2 is deployed
+            project.metaFields = [
+              {
+                'name': 'dfau-support-org-name',
+                'value': project.parentTitle
+              },
+              {
+                'name': 'dfau-devboard-name',
+                'value': project.combinedName
+              }
+            ];
+            projectMap[project.name + project.id] = project;
           }
-        },
-        onError: function (xhr) {
-          TogglButton.setBrowserActionBadge();
-          resolve({
-            success: false,
-            type: 'data',
-            error: 'Connectivity error'
-          });
-        }
-      });
-    });
+        });
+        TogglButton.$user.projectMap = projectMap;
+        localStorage.setItem('projects', JSON.stringify(projectMap));
+      })
+    );
+  },
+
+  fetchClients: function () {
+    return TogglButton.rxAjax('/customers', {
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      tap(clients => {
+        const clientMap = {};
+        const clientNameMap = {};
+        clients.forEach(function (client) {
+          // workaround due to missing workspaces
+          client.wid = 0;
+          clientMap[client.id] = client;
+          clientNameMap[client.name.toLowerCase() + client.id] = client;
+        });
+        TogglButton.$user.clientMap = clientMap;
+        TogglButton.$user.clientNameMap = clientNameMap;
+        localStorage.setItem('clients', JSON.stringify(clientMap));
+      })
+    );
+  },
+
+  fetchTasks: function () {
+    return TogglButton.rxAjax('/activities', {
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      tap(tasks => {
+        const projectTaskList = {};
+        tasks.forEach(function (task) {
+          // workaround due to missing workspaces
+          task.wid = 0;
+          const pid = task.project ? task.project : 0;
+          if (!projectTaskList[pid]) {
+            projectTaskList[pid] = [];
+          }
+          projectTaskList[pid].push(task);
+        });
+        TogglButton.$user.tasks = tasks;
+        TogglButton.$user.projectTaskList = projectTaskList;
+        localStorage.setItem('tasks', JSON.stringify(tasks));
+      })
+    );
+  },
+
+  fetchTimeEntries: function () {
+    return TogglButton.rxAjax('/timesheets', {
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      tap(timeEntries => {
+        const entry = timeEntries.find(te => te.duration <= 0) || null;
+        timeEntries.forEach(function (timesheet) {
+          // workaround due to missing workspaces
+          timesheet.wid = 0;
+        });
+
+        TogglButton.$user.time_entries = timeEntries;
+        TogglButton.updateTriggers(entry);
+      })
+    );
   },
 
   handleQueue: function () {
@@ -935,6 +926,28 @@ window.TogglButton = {
     }
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify(opts.payload));
+  },
+
+  /**
+   * @return {Observable<AjaxResponse>}
+   */
+  rxAjax: function (url, opts) {
+    const baseUrl = opts.baseUrl || TogglButton.$ApiUrl;
+    const resolvedUrl = baseUrl + url;
+
+    const headers = {
+      'Content-Type': 'application/json'
+    };
+
+    if (resolvedUrl.match(TogglButton.$ApiUrl)) {
+      headers['X-AUTH-SESSION'] = true;
+    }
+
+    return ajax({
+      url: resolvedUrl,
+      method: opts.method || 'GET',
+      headers: headers
+    });
   },
 
   resetPomodoroProgress: function (entry) {
