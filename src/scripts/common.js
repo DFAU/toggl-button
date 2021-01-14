@@ -793,7 +793,6 @@ window.togglbutton = {
       };
       browser.runtime.sendMessage(request);
 
-      console.log(togglbutton.element);
       togglbutton.activateTimerLink(togglbutton.element);
 
       closeForm();
@@ -808,7 +807,7 @@ window.togglbutton = {
 
     setCursorAtBeginning(togglButtonDescription);
     projectAutocomplete.setup(pid, 0);
-    taskAutocomplete.setProjectId(pid);
+    taskAutocomplete.setup(tid, pid);
     tagAutocomplete.setSelected(response.entry.tags);
     tagAutocomplete.setWorkspaceId(0);
 

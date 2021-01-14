@@ -17,6 +17,7 @@ import { groupTimeEntriesByDay } from './lib/groupUtils';
 import renderLogin from './initializers/login';
 
 let TogglButton = browser.extension.getBackgroundPage().TogglButton;
+const db = browser.extension.getBackgroundPage().db;
 const FF = navigator.userAgent.indexOf('Chrome') === -1;
 
 if (FF) {
@@ -27,9 +28,12 @@ const Popup = {
   $postStartText: ' post-start popup',
   $popUpButton: null,
   $errorLabel: document.querySelector('.error'),
-  $projectAutocomplete: null,
-  $taskAutocomplete: null,
-  $tagAutocomplete: null,
+  $editProjectAutocomplete: null,
+  $editTaskAutocomplete: null,
+  $editTagAutocomplete: null,
+  $newProjectAutocomplete: null,
+  $newTaskAutocomplete: null,
+  $newTagAutocomplete: null,
   $timer: null,
   $tagsVisible: false,
   mousedownTrigger: null,
@@ -243,9 +247,9 @@ const Popup = {
 
     togglButtonDuration.value = secToHhmmImproved(duration, { html: false });
 
-    PopUp.$projectAutocomplete.setup(pid, null);
-    PopUp.$tagAutocomplete.setup(timeEntry.tags, wid);
-    Popup.$taskAutocomplete.setup(tid, pid);
+    PopUp.$editProjectAutocomplete.setup(pid, null);
+    PopUp.$editTagAutocomplete.setup(timeEntry.tags, wid);
+    PopUp.$editTaskAutocomplete.setup(tid, pid);
 
     PopUp.setupBillable(!!timeEntry.billable, pid);
     PopUp.switchView(PopUp.$editView);
@@ -265,17 +269,28 @@ const Popup = {
    * Render edit-form for given time entry object
    * @param description {string}
    */
-  renderNewForm: function (description) {
-    const pid = 0;
-    const tid = 0;
+  renderNewForm: async function (description) {
+    let pid = 0;
+    let tid = 0;
     const wid = 0;
+
+    const defaultTask = await db.getDefaultTask();
+    const defaultProject = await db.getDefaultProject();
+    if (defaultTask) {
+      tid = defaultTask;
+    }
+    if (defaultProject) {
+      pid = defaultProject;
+    }
+
     const togglButtonDescription = Popup.$newView.querySelector(
       '#toggl-button-description'
     );
     togglButtonDescription.value = description;
 
-    PopUp.$projectAutocomplete.setup(pid, tid);
-    PopUp.$tagAutocomplete.setup([], wid);
+    PopUp.$newProjectAutocomplete.setup(pid, 0);
+    PopUp.$newTagAutocomplete.setup([], wid);
+    PopUp.$newTaskAutocomplete.setup(tid, pid);
 
     PopUp.setupBillable(false, pid);
     PopUp.switchView(PopUp.$newView);
@@ -388,8 +403,8 @@ const Popup = {
       return;
     }
 
-    const selectedProject = PopUp.$projectAutocomplete.getSelected();
-    const selectedTask = Popup.$taskAutocomplete.getSelected();
+    const selectedProject = PopUp.$editProjectAutocomplete.getSelected();
+    const selectedTask = Popup.$editTaskAutocomplete.getSelected();
     const billable = !!document.querySelector(
       '.tb-billable.tb-checked:not(.no-billable)'
     );
@@ -398,7 +413,7 @@ const Popup = {
       type: 'update',
       description: document.querySelector('#toggl-button-description').value,
       project: selectedProject.pid,
-      tags: PopUp.$tagAutocomplete.getSelected(),
+      tags: PopUp.$editTagAutocomplete.getSelected(),
       activity: selectedTask.tid,
       respond: true,
       billable: billable,
@@ -464,21 +479,21 @@ const Popup = {
 
   addEditEvents: function () {
     /* Edit form events */
-    PopUp.$projectAutocomplete = new ProjectAutoComplete(
+    PopUp.$editProjectAutocomplete = new ProjectAutoComplete(
       'project',
       'li',
       PopUp,
       this.$editView
     );
 
-    Popup.$taskAutocomplete = new TaskAutoComplete(
+    Popup.$editTaskAutocomplete = new TaskAutoComplete(
       'task',
       'li',
       Popup,
       this.$editView
     );
 
-    PopUp.$tagAutocomplete = new TagAutoComplete('tag', 'li', PopUp, this.$editView);
+    PopUp.$editTagAutocomplete = new TagAutoComplete('tag', 'li', PopUp, this.$editView);
     PopUp.$billable = document.querySelector('.tb-billable');
 
     document
@@ -542,12 +557,12 @@ const Popup = {
         PopUp.updateDurationInput(true);
       });
 
-    PopUp.$projectAutocomplete.onChange(function (selected) {
+    PopUp.$editProjectAutocomplete.onChange(function (selected) {
       const project = TogglButton.findProjectByPid(selected.pid);
 
       const wid = project ? project.wid : TogglButton.$curEntry.wid;
-      PopUp.$tagAutocomplete.setWorkspaceId(wid);
-      Popup.$taskAutocomplete.setProjectId(selected.pid);
+      PopUp.$editTagAutocomplete.setWorkspaceId(wid);
+      Popup.$editTaskAutocomplete.setProjectId(selected.pid);
     });
 
     PopUp.$billable.addEventListener('click', function () {
@@ -580,21 +595,21 @@ const Popup = {
 
   addNewEvents: function () {
     /* Edit form events */
-    const projectDropdown = new ProjectAutoComplete(
+    PopUp.$newProjectAutocomplete = new ProjectAutoComplete(
       'project',
       'li',
       PopUp,
       this.$newView
     );
 
-    const taskDropdown = new TaskAutoComplete(
+    PopUp.$newTaskAutocomplete = new TaskAutoComplete(
       'task',
       'li',
-      Popup,
+      PopUp,
       this.$newView
     );
 
-    const tagsInput = new TagAutoComplete('tag', 'li', PopUp, this.$newView);
+    PopUp.$newTagAutocomplete = new TagAutoComplete('tag', 'li', PopUp, this.$newView);
 
     const cancelButton = PopUp.$newView.querySelector('#tb-edit-form-cancel');
     cancelButton
@@ -611,17 +626,17 @@ const Popup = {
         }
       });
 
-    projectDropdown.onChange(function (selected) {
+    PopUp.$newProjectAutocomplete.onChange(function (selected) {
       const project = TogglButton.findProjectByPid(selected.pid);
       if (project) {
-        taskDropdown.setProjectId(project.id);
+        Popup.$newTaskAutocomplete.setProjectId(project.id);
       }
     });
 
     const handleSubmit = (e) => {
       e.preventDefault();
-      const selectedProject = projectDropdown.getSelected();
-      const selectedTask = taskDropdown.getSelected();
+      const selectedProject = Popup.$newProjectAutocomplete.getSelected();
+      const selectedTask = Popup.$newTaskAutocomplete.getSelected();
       if (selectedProject.pid <= 0) {
         alert('Select Project');
         return;
@@ -631,12 +646,11 @@ const Popup = {
         return;
       }
 
-      selectedProject.tid = selectedTask.tid;
       const timeEntry = {
         project: selectedProject.pid,
         activity: selectedTask.tid,
         description: this.$newView.querySelector('#toggl-button-description').value,
-        tags: tagsInput.getSelected(),
+        tags: PopUp.$newTagAutocomplete.getSelected(),
         metaFields: [
           {
             name: 'kimai2_plugin',

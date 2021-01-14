@@ -169,6 +169,30 @@ export default class Db {
     return defaultProjects[scope] || defaultProject;
   }
 
+  /**
+   * Sets the default task for a given scope
+   * @param {number} tid The task id
+   * If null, then set global default
+   */
+  setDefaultTask (tid) {
+    const userId = this.togglButton.$user.id;
+    return this.set(userId + '-defaultTask', tid);
+  }
+
+  /**
+   * Gets the default project for a given scope
+   * @param {string=} scope If null, then get global default
+   * @returns {number} The default project for the given scope
+   */
+  async getDefaultTask () {
+    if (!this.togglButton.$user) {
+      return 0;
+    }
+    const userId = this.togglButton.$user.id;
+    const defaultTask = await this.get(userId + '-defaultTask');
+    return parseInt(defaultTask || '0', 10);
+  }
+
   resetDefaultProjects () {
     if (!this.togglButton.$user) {
       return;

@@ -323,6 +323,7 @@ window.TogglButton = {
                   });
                   TogglButton.$user.tasks = tasks;
                   TogglButton.$user.projectTaskList = projectTaskList;
+                  localStorage.setItem('tasks', JSON.stringify(tasks));
                 }
               );
 
@@ -1170,7 +1171,6 @@ window.TogglButton = {
           baseUrl: TogglButton.$ApiUrl,
           onLoad: async function (xhr) {
             const success = xhr.status === 200;
-            alert('updated time entry' + xhr.status + xhr.responseText);
             try {
               if (success) {
                 entry = JSON.parse(xhr.responseText);
@@ -2162,10 +2162,39 @@ window.TogglButton = {
           }
         } else if (request.type === 'newTimeEntry') {
           const timeEntry = request.entry;
+          const defaultTask = await db.getDefaultTask();
 
-          if (timeEntry.projectPredicate && !timeEntry.project) {
+          TogglButton.$curService = (timeEntry || {}).service;
+          TogglButton.$curURL = (timeEntry || {}).url;
+
+          if (timeEntry.projectPredicate && !timeEntry.pid) {
             const project = TogglButton.findProjectByPredicate(timeEntry.projectPredicate);
             request.entry.pid = (project && project.id) || null;
+          }
+
+          // set Default project if needed
+          if (!timeEntry.pid) {
+            let defaultProject;
+            const rememberProjectPer = await db.get('rememberProjectPer');
+
+            if (rememberProjectPer) {
+              defaultProject = await db.getDefaultProject(
+                rememberProjectPer === 'service'
+                  ? TogglButton.$curService
+                  : TogglButton.$curURL
+              );
+            } else {
+              defaultProject = await db.getDefaultProject();
+            }
+
+            if (defaultProject) {
+              const project = TogglButton.findProjectByPid(defaultProject);
+              request.entry.pid = (project && project.id) || null;
+            }
+          }
+
+          if (!timeEntry.tid && !!defaultTask) {
+            request.entry.tid = defaultTask;
           }
 
           const form = TogglButton.getNewForm();

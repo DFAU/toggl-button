@@ -197,6 +197,7 @@ const Settings = {
       document.querySelector('.field.stop-at-day-end').classList.toggle('field--showDetails', stopAtDayEnd);
 
       Settings.fillDefaultProject();
+      Settings.fillDefaultTask();
 
       Settings.loadSitesIntoList();
     } catch (e) {
@@ -213,8 +214,6 @@ const Settings = {
 
     if (hasProjects && !!TogglButton.$user) {
       const defaultProject = await db.getDefaultProject();
-      const clients = db.getLocal('clients') || {};
-
       const html = document.createElement('select');
       html.id = 'default-project';
       html.setAttribute('name', 'default-project');
@@ -228,10 +227,7 @@ const Settings = {
       for (const key in projects) {
         if (projects.hasOwnProperty(key)) {
           const project = projects[key];
-          const clientName =
-            !!project.cid && !!clients[project.cid]
-              ? ' . ' + clients[project.cid].name
-              : '';
+          const clientName = ' . ' + project.parentTitle;
           dom = document.createElement('option');
 
           if (!!defaultProject && parseInt(defaultProject, 10) === project.id) {
@@ -265,6 +261,51 @@ const Settings = {
       });
     }
   },
+
+  fillDefaultTask: async function () {
+    const tasks = db.getLocal('tasks') || {};
+    const hasTaks = Object.keys(tasks).length > 0;
+
+    if (hasTaks && !!TogglButton.$user) {
+      const defaultTask = await db.getDefaultTask();
+
+      const html = document.createElement('select');
+      html.id = 'default-task';
+      html.setAttribute('name', 'default-task');
+
+      let dom = document.createElement('option');
+      dom.setAttribute('value', '0');
+      dom.textContent = '- No task -';
+
+      html.appendChild(dom);
+
+      for (const key in tasks) {
+        if (tasks.hasOwnProperty(key)) {
+          const task = tasks[key];
+          dom = document.createElement('option');
+
+          if (!!defaultTask && parseInt(defaultTask, 10) === task.id) {
+            dom.setAttribute('selected', 'selected');
+          }
+
+          dom.setAttribute('value', task.id);
+          dom.textContent = task.name;
+          html.appendChild(dom);
+        }
+      }
+
+      Settings.$defaultTaskContainer.appendChild(html);
+
+      Settings.$defaultTask = document.querySelector('#default-task');
+
+      Settings.$defaultTask.addEventListener('change', function (e) {
+        const defaultTask = Settings.$defaultTask.options[Settings.$defaultTask.selectedIndex].value;
+        db.setDefaultTask(defaultTask);
+        Settings.saveSetting(defaultTask, 'change-default-task');
+      });
+    }
+  },
+
   getAllPermissions: function () {
     const items = document.querySelectorAll('#permissions-list li input');
 
@@ -694,6 +735,9 @@ document.addEventListener('DOMContentLoaded', async function (e) {
     );
     Settings.$rememberProjectPer = document.querySelector(
       '#remember-project-per'
+    );
+    Settings.$defaultTaskContainer = document.querySelector(
+      '#default-task-container'
     );
     Settings.$sendUsageStatistics = document.querySelector(
       '#send-usage-statistics'
