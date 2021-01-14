@@ -2437,10 +2437,6 @@ browser.windows.onCreated.addListener(function () {
 });
 browser.windows.onRemoved.addListener(TogglButton.stopTrackingOnBrowserClosed);
 
-browser.runtime
-  .setUninstallURL(`${process.env.TOGGL_WEB_HOST}/toggl-button-feedback/`)
-  .catch(bugsnagClient.notify);
-
 window.onbeforeunload = function () {
   db.get('stopAutomatically')
     .then((stopAutomatically) => {
