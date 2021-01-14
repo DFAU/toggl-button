@@ -4,6 +4,11 @@ export default {
     name: 'DFAU-Support',
     file: 'dfau-support.js'
   },
+  'dev.dfau.de': {
+    url: '*://dev.dfau.de/*',
+    name: 'DFAU-Dev-Board',
+    file: 'dfau-dev.js'
+  },
   'agenocrm.com': {
     url: '*://*.agenocrm.com/*',
     name: 'AgenoCRM',
@@ -647,10 +652,6 @@ export default {
   'waffle.io': {
     url: '*://waffle.io/*',
     name: 'Waffle'
-  },
-  'dev.dfau.de': {
-    url: '*://dev.dfau.de/*',
-    name: 'Wekan'
   },
   'wordpress.com': {
     url: '*://wordpress.com/*',

@@ -11,7 +11,7 @@ togglbutton.render(
     const togglLink = togglbutton.createTimerLink({
       className: 'wekan-toggle-btn',
       description: descriptionSelector,
-      projectName: projectSelector
+      projectPredicate: projectPredicate
     });
 
     // Append the button to the ticket controls
@@ -39,11 +39,32 @@ function descriptionSelector () {
 
 /**
  * We take the client name as project if one is found and append the organization if the client is assigned
- * @returns {string}
+ * @returns {Object}
  */
-function projectSelector () {
-  console.log('Get project..');
-
-  // todo get project name from client etc.
-  return '';
+function projectPredicate () {
+  const linkedCardLocation = document.querySelector('.linked-card-location');
+  if (linkedCardLocation) {
+    const linkedDevboard = linkedCardLocation.textContent.trim().replace(/ >.*/gm, '');
+    return {
+      'metaFields': [
+        {
+          'name': 'dfau-devboard-name',
+          'value': linkedDevboard
+        }
+      ]
+    };
+  }
+  const currentBoardHeader = document.querySelector('.header-board-menu');
+  if (currentBoardHeader) {
+    const defaultBoard = currentBoardHeader.textContent.trim();
+    return {
+      'metaFields': [
+        {
+          'name': 'dfau-devboard-name',
+          'value': defaultBoard
+        }
+      ]
+    };
+  }
+  return {};
 }
