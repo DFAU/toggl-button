@@ -9,7 +9,7 @@ import Sound from './lib/sound';
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
 import find from 'lodash.find';
 import { ajax } from 'rxjs/ajax';
-import { map, take, tap, catchError, switchMap } from 'rxjs/operators';
+import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
 import { forkJoin, of } from 'rxjs';
 
 const _ = {
@@ -1195,12 +1195,6 @@ window.TogglButton = {
       baseUrl: TogglButton.$ApiUrl
     }).pipe(
       map(response => response.response),
-      switchMap(entry => {
-        if (timeEntry.metaFields) {
-          return TogglButton.updateMultipleTimeEntryMetaFields(entry.id, timeEntry.metaFields);
-        }
-        return of(entry);
-      }),
       tap(entry => {
         // Not using TogglButton.updateCurrent as the time is not changed
         if (isRunningEntry) {
@@ -1235,44 +1229,46 @@ window.TogglButton = {
   },
 
   deleteTimeEntry: function (timeEntry, sendResponse) {
-    return new Promise(function (resolve, reject) {
-      TogglButton.ajax(
-        `/timesheets/${timeEntry.id}`,
-        {
-          method: 'DELETE',
-          baseUrl: TogglButton.$ApiUrl,
-          onLoad: function (xhr) {
-            const success = xhr.status === 204;
-            if (success) {
-              const timeEntryId = parseInt(timeEntry.id, 10);
-              if (TogglButton.$curEntry && TogglButton.$curEntry.id === timeEntryId) {
-                TogglButton.$curEntry = null;
-                TogglButton.updateTriggers(null);
-              }
-              const entries = TogglButton.$user.time_entries.filter(function (entry) {
-                return entry.id !== timeEntryId;
-              });
-              TogglButton.$user.time_entries = entries;
-            }
-            try {
-              resolve({ success: success, type: 'delete', id: timeEntry.id });
-            } catch (e) {
-              report(e);
-              resolve({
-                success: false,
-                type: 'delete'
-              });
-            }
-          },
-          onError: function (xhr) {
-            resolve({
-              success: false,
-              type: 'delete'
-            });
-          }
+    const timeEntryId = parseInt(timeEntry.id, 10);
+    return TogglButton.rxAjax(`/timesheets/${timeEntryId}`, {
+      method: 'DELETE',
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      switchMap(entry => {
+        if (timeEntry.metaFields) {
+          return TogglButton.updateMultipleTimeEntryMetaFields(entry.id, timeEntry.metaFields);
         }
-      );
-    });
+        return of(entry);
+      }),
+      tap(() => {
+        if (TogglButton.$curEntry && TogglButton.$curEntry.id === timeEntryId) {
+          TogglButton.$curEntry = null;
+          TogglButton.updateTriggers(null);
+        }
+        TogglButton.$user.time_entries = TogglButton.$user.time_entries.filter(function (entry) {
+          return entry.id !== timeEntryId;
+        });
+      }),
+      map(() => {
+        return { success: true, type: 'delete', id: timeEntryId };
+      }),
+      catchError(error => {
+        report(error.message);
+        bugsnagClient.notify(new Error(`Deleting time entry failed ${error.status}`), {
+          metaData: {
+            url: error.request.url,
+            status: error.status,
+            responseText: error.message
+          }
+        });
+        return of({
+          success: false,
+          type: 'delete',
+          error: error.message
+        });
+      })
+    ).toPromise();
   },
 
   setBrowserActionBadge: function () {
