@@ -1161,91 +1161,77 @@ window.TogglButton = {
   },
 
   updateTimeEntry: function (timeEntry, sendResponse) {
-    let entry;
-    let error = '';
     const isRunningEntry = TogglButton.$curEntry && TogglButton.$curEntry.id === timeEntry.id;
+    const entry = {
+      description: timeEntry.description,
+      tags: timeEntry.tags.join(',')
+    };
 
-    return new Promise(function (resolve, reject) {
-      entry = {
-        description: timeEntry.description,
-        tags: timeEntry.tags.join(',')
-      };
+    const timeEntryId = timeEntry.id ? timeEntry.id : TogglButton.$curEntry.id;
 
-      const timeEntryId = timeEntry.id ? timeEntry.id : TogglButton.$curEntry.id;
+    if (timeEntry.project) {
+      entry.project = timeEntry.project;
+    }
 
-      if (timeEntry.project) {
-        entry.project = timeEntry.project;
-      }
+    if (timeEntry.activity) {
+      entry.activity = timeEntry.activity;
+    }
 
-      if (timeEntry.activity) {
-        entry.activity = timeEntry.activity;
-      }
+    if (timeEntry.begin) {
+      entry.begin = timeEntry.begin;
+    }
 
-      if (timeEntry.begin) {
-        entry.begin = timeEntry.begin;
-      }
+    if (!isRunningEntry) {
+      entry.end = timeEntry.end;
+    }
 
-      if (!isRunningEntry) {
-        entry.end = timeEntry.end;
-      }
+    if (timeEntry.duration > 0) {
+      entry.duration = timeEntry.duration;
+    }
 
-      if (timeEntry.duration > 0) {
-        entry.duration = timeEntry.duration;
-      }
-
-      TogglButton.ajax(
-        `/timesheets/${timeEntryId}`,
-        {
-          method: 'PATCH',
-          payload: entry,
-          baseUrl: TogglButton.$ApiUrl,
-          onLoad: async function (xhr) {
-            const success = xhr.status === 200;
-            try {
-              if (success) {
-                entry = JSON.parse(xhr.responseText);
-
-                if (timeEntry.metaFields) {
-                  for (const metaField of timeEntry.metaFields) {
-                    await TogglButton.updateTimeEntryMetaFields(timeEntryId, metaField);
-                  }
-                }
-
-                // Not using TogglButton.updateCurrent as the time is not changed
-                if (isRunningEntry) {
-                  TogglButton.$curEntry = entry;
-                  TogglButton.setBrowserAction(entry);
-                } else {
-                  const idx = TogglButton.$user.time_entries.findIndex(t => t.id === timeEntry.id);
-                  if (idx) {
-                    TogglButton.$user.time_entries[idx] = entry;
-                  }
-                }
-              } else {
-                error = xhr.responseText;
-              }
-              if (timeEntry.respond) {
-                resolve({ success: success, type: 'Update', error: error });
-              } else {
-                resolve();
-              }
-            } catch (e) {
-              report(e);
-              resolve({
-                success: false,
-                type: 'Update'
-              });
-            }
-          },
-          onError: function (xhr) {
-            resolve({
-              success: false,
-              type: 'Update'
-            });
+    return TogglButton.rxAjax(`/timesheets/${timeEntryId}`, {
+      method: 'PATCH',
+      payload: entry,
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      switchMap(entry => {
+        if (timeEntry.metaFields) {
+          return TogglButton.updateMultipleTimeEntryMetaFields(entry.id, timeEntry.metaFields);
+        }
+        return of(entry);
+      }),
+      tap(entry => {
+        // Not using TogglButton.updateCurrent as the time is not changed
+        if (isRunningEntry) {
+          TogglButton.$curEntry = entry;
+          TogglButton.setBrowserAction(entry);
+        } else {
+          const idx = TogglButton.$user.time_entries.findIndex(t => t.id === timeEntry.id);
+          if (idx) {
+            TogglButton.$user.time_entries[idx] = entry;
           }
         }
-      );
-    });
+      }),
+      map(() => {
+        return { success: true, type: 'Update', error: '' };
+      }),
+      catchError(error => {
+        report(error.xhr.responseText);
+        bugsnagClient.notify(new Error(`Updating time entry failed ${error.status}`), {
+          metaData: {
+            url: error.request.url,
+            status: error.status,
+            responseText: error.message
+          }
+        });
+        return of({
+          success: false,
+          type: 'Update',
+          error: error.message
+        });
+      })
+    ).toPromise();
   },
 
   deleteTimeEntry: function (timeEntry, sendResponse) {
