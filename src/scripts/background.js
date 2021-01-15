@@ -2029,10 +2029,12 @@ window.TogglButton = {
     return { today: secToHHMM(todaySum), week: secToHHMM(weekSum) };
   },
 
-  contextMenuClick: function (info, tab) {
+  contextMenuClick: async function (info, tab) {
+    const activity = await db.getDefaultTask();
     TogglButton.createTimeEntry(
       {
         type: 'timeEntry',
+        activity: activity,
         service: 'contextMenu',
         description: info.selectionText || tab.title
       },
@@ -2144,7 +2146,8 @@ window.TogglButton = {
             })
             .catch(() => resolve(undefined));
         } else if (request.type === 'logout') {
-          TogglButton.logoutUser().then(resolve);
+          TogglButton.logoutUser();
+          resolve(undefined);
         } else if (request.type === 'sync') {
           const res = TogglButton.fetchUser();
           if (request.respond) {
