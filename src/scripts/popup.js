@@ -167,7 +167,7 @@ const Popup = {
         } else if (
           request.type === 'login' ||
         (!!response.type &&
-          (response.type === 'New Entry' || response.type === 'Update' || response.type === 'delete'))
+          (response.type === 'New Entry' || response.type === 'Update' || response.type === 'delete' || response.type === 'Stop'))
         ) {
           PopUp.showError(response.error || PopUp.defaultErrorMessage);
         }

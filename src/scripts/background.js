@@ -693,7 +693,7 @@ window.TogglButton = {
       map(response => response.response),
       switchMap(entry => {
         if (timeEntry.metaFields) {
-          return TogglButton.updateMultipleTimeEntryMetaFields(entry.id, timeEntry.metaFields);
+          return TogglButton.updateTimeEntryMetaFields(entry.id, timeEntry.metaFields);
         }
         return of(entry);
       }),
@@ -744,7 +744,7 @@ window.TogglButton = {
    * @param {MetaFields} fields
    * @return {Observable<TimeEntry>}
    */
-  updateMultipleTimeEntryMetaFields: function (id, fields) {
+  updateTimeEntryMetaFields: function (id, fields) {
     const updateMetaFieldBatch = fields.map((metaField) => {
       return TogglButton.rxAjax(`/timesheets/${id}/meta`, {
         method: 'PATCH',
@@ -756,28 +756,6 @@ window.TogglButton = {
     return forkJoin(updateMetaFieldBatch).pipe(
       map(results => results.pop().response)
     );
-  },
-
-  updateTimeEntryMetaFields: function (id, value) {
-    return new Promise((resolve) => {
-      TogglButton.ajax(`/timesheets/${id}/meta`, {
-        method: 'PATCH',
-        payload: value,
-        baseUrl: TogglButton.$ApiUrl,
-        onLoad: function (xhr) {
-          const success = xhr.status === 200;
-          try {
-            if (success) {
-              resolve({
-                success: true
-              });
-            }
-          } catch (e) {
-            report(e);
-          }
-        }
-      });
-    });
   },
 
   latestEntry: function () {
@@ -1029,43 +1007,39 @@ window.TogglButton = {
   },
 
   stopTimeEntry: function (timeEntry, sendResponse, cb) {
-    return new Promise((resolve) => {
-      if (!TogglButton.$curEntry) {
-        resolve();
-        return;
-      }
+    return TogglButton.rxAjax(`/timesheets/${TogglButton.$curEntry.id}/stop`, {
+      method: 'PATCH',
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      map((entry) => {
+        TogglButton.$latestStoppedEntry = entry;
+        TogglButton.updateEntriesDb();
+        TogglButton.resetPomodoroProgress(null);
+        TogglButton.setNannyTimer();
 
-      TogglButton.ajax(
-        `/timesheets/${TogglButton.$curEntry.id}/stop`,
-        {
-          method: 'PATCH',
-          baseUrl: TogglButton.$ApiUrl,
-          onLoad: function (xhr) {
-            if (xhr.status === 200) {
-              TogglButton.$latestStoppedEntry = JSON.parse(xhr.responseText);
-              TogglButton.updateEntriesDb();
-              TogglButton.resetPomodoroProgress(null);
-              TogglButton.setNannyTimer();
+        browser.tabs.query({ active: true, currentWindow: true })
+          .then(filterTabs(function (tabs) {
+            browser.tabs.sendMessage(tabs[0].id, { type: 'stop-entry', user: TogglButton.$user });
+          }));
 
-              resolve({ success: true, type: 'Stop' });
-              browser.tabs.query({ active: true, currentWindow: true })
-                .then(filterTabs(function (tabs) {
-                  browser.tabs.sendMessage(tabs[0].id, { type: 'stop-entry', user: TogglButton.$user });
-                }));
-            }
-            if (xhr.status === 400 && xhr.response && xhr.response.includes('please add a')) {
-              TogglButton.showUnmetConstraintsNotification(xhr.response);
-            }
-          },
-          onError: function (xhr) {
-            resolve({
-              success: false,
-              type: 'Stop'
-            });
+        return { success: true, type: 'Stop' };
+      }),
+      catchError(error => {
+        bugsnagClient.notify(new Error(`Stopping time entry failed ${error.status}`), {
+          metaData: {
+            url: error.request.url,
+            status: error.status,
+            responseText: error.message
           }
-        }
-      );
-    });
+        });
+        return of({
+          success: false,
+          type: 'Stop',
+          error: error.message
+        });
+      })
+    ).toPromise();
   },
 
   showUnmetConstraintsNotification: function (message) {
@@ -1211,7 +1185,6 @@ window.TogglButton = {
         return { success: true, type: 'Update', error: '' };
       }),
       catchError(error => {
-        report(error.xhr.responseText);
         bugsnagClient.notify(new Error(`Updating time entry failed ${error.status}`), {
           metaData: {
             url: error.request.url,
@@ -1237,7 +1210,7 @@ window.TogglButton = {
       map(response => response.response),
       switchMap(entry => {
         if (timeEntry.metaFields) {
-          return TogglButton.updateMultipleTimeEntryMetaFields(entry.id, timeEntry.metaFields);
+          return TogglButton.updateTimeEntryMetaFields(entry.id, timeEntry.metaFields);
         }
         return of(entry);
       }),
