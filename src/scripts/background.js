@@ -10,7 +10,7 @@ import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
 import find from 'lodash.find';
 import { ajax } from 'rxjs/ajax';
 import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
-import { forkJoin, of } from 'rxjs';
+import { EMPTY, forkJoin, of } from 'rxjs';
 
 const _ = {
   find
@@ -1007,6 +1007,10 @@ window.TogglButton = {
   },
 
   stopTimeEntry: function (timeEntry, sendResponse, cb) {
+    if (!TogglButton.$curEntry) {
+      return EMPTY.toPromise();
+    }
+
     return TogglButton.rxAjax(`/timesheets/${TogglButton.$curEntry.id}/stop`, {
       method: 'PATCH',
       baseUrl: TogglButton.$ApiUrl
