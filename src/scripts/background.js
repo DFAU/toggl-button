@@ -632,8 +632,7 @@ window.TogglButton = {
     let defaultProject;
     const rememberProjectPer = await db.get('rememberProjectPer');
     const enableAutoTagging = await db.get('enableAutoTagging');
-    let entry;
-    let error = '';
+    const error = '';
     let project;
 
     TogglButton.$curService = (timeEntry || {}).service;
@@ -664,7 +663,7 @@ window.TogglButton = {
       type === 'idle-detection-notification-continue' // Include tags when using Continue-and-discard in idle detection
     );
 
-    entry = {
+    const entry = {
       begin: begin.toISOString(),
       description: timeEntry.description || '',
       project: timeEntry.project || timeEntry.projectId || null,
@@ -683,63 +682,80 @@ window.TogglButton = {
       entry.project = (project && project.id) || null;
     }
 
-    return new Promise((resolve) => {
-      TogglButton.ajax('/timesheets', {
-        method: 'POST',
-        payload: entry,
-        baseUrl: TogglButton.$ApiUrl,
-        onLoad: async function (xhr) {
-          const hasTasks =
-            !!TogglButton.$user && !!TogglButton.$user.projectTaskList;
+    const showPostPopup = await db.get('showPostPopup');
+    const darkMode = await db.get('darkMode');
 
-          const success = xhr.status === 200;
-          try {
-            if (success) {
-              entry = JSON.parse(xhr.responseText);
-
-              if (timeEntry.metaFields) {
-                for (const metaField of timeEntry.metaFields) {
-                  await TogglButton.updateTimeEntryMetaFields(entry.id, metaField);
-                }
-              }
-              TogglButton.localEntry = entry;
-              TogglButton.updateTriggers(entry);
-              db.bumpTrackedCount();
-            } else {
-              error = xhr.responseText;
-            }
-
-            if (timeEntry.respond) {
-              const showPostPopup = await db.get('showPostPopup');
-              const darkMode = await db.get('darkMode');
-              resolve({
-                success,
-                type: 'New Entry',
-                entry,
-                showPostPopup,
-                html: TogglButton.getEditForm(),
-                container,
-                hasTasks,
-                darkMode,
-                error
-              });
-            } else {
-              resolve({
-                success: true
-              });
-            }
-          } catch (e) {
-            report(e);
-          }
-        },
-        onError: function (xhr) {
-          resolve({
-            success: false,
-            type: 'New Entry'
-          });
+    return TogglButton.rxAjax('/timesheets', {
+      method: 'POST',
+      payload: entry,
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      map(response => response.response),
+      switchMap(entry => {
+        if (timeEntry.metaFields) {
+          return TogglButton.updateMultipleTimeEntryMetaFields(entry.id, timeEntry.metaFields);
         }
+        return of(entry);
+      }),
+      tap(entry => {
+        TogglButton.entry = entry;
+        TogglButton.updateTriggers(entry);
+        db.bumpTrackedCount();
+      }),
+      map(entry => {
+        if (timeEntry.respond) {
+          const hasTasks = !!TogglButton.$user && !!TogglButton.$user.projectTaskList;
+          return {
+            success: true,
+            type: 'New Entry',
+            entry,
+            showPostPopup,
+            html: TogglButton.getEditForm(),
+            container,
+            hasTasks,
+            darkMode,
+            error
+          };
+        }
+        return {
+          success: true
+        };
+      }),
+      catchError(error => {
+        report(error.xhr.responseText);
+        bugsnagClient.notify(new Error(`Creating time entry failed ${error.status}`), {
+          metaData: {
+            url: error.request.url,
+            status: error.status,
+            responseText: error.message
+          }
+        });
+        return of({
+          success: false,
+          type: 'New Entry'
+        });
+      })
+    ).toPromise();
+  },
+
+  /**
+   *
+   * @param {number} id
+   * @param {MetaFields} fields
+   * @return {Observable<TimeEntry>}
+   */
+  updateMultipleTimeEntryMetaFields: function (id, fields) {
+    const updateMetaFieldBatch = fields.map((metaField) => {
+      return TogglButton.rxAjax(`/timesheets/${id}/meta`, {
+        method: 'PATCH',
+        payload: metaField,
+        baseUrl: TogglButton.$ApiUrl
       });
     });
+
+    return forkJoin(updateMetaFieldBatch).pipe(
+      map(results => results.pop().response)
+    );
   },
 
   updateTimeEntryMetaFields: function (id, value) {
@@ -946,7 +962,8 @@ window.TogglButton = {
     return ajax({
       url: resolvedUrl,
       method: opts.method || 'GET',
-      headers: headers
+      headers: headers,
+      body: opts.payload
     });
   },
 
