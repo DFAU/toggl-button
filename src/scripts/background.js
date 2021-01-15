@@ -301,7 +301,7 @@ window.TogglButton = {
       catchError(error => {
         bugsnagClient.notify(new Error(`Fetching additional data failed ${error.status}`), {
           metaData: {
-            url: error.request.url,
+            url: error.request ? error.request.url : undefined,
             status: error.status,
             responseText: error.message
           }
@@ -941,7 +941,8 @@ window.TogglButton = {
       url: resolvedUrl,
       method: opts.method || 'GET',
       headers: headers,
-      body: opts.payload
+      body: opts.payload,
+      crossDomain: false
     });
   },
 
@@ -1173,6 +1174,12 @@ window.TogglButton = {
       baseUrl: TogglButton.$ApiUrl
     }).pipe(
       map(response => response.response),
+      switchMap(entry => {
+        if (timeEntry.metaFields) {
+          return TogglButton.updateTimeEntryMetaFields(entry.id, timeEntry.metaFields);
+        }
+        return of(entry);
+      }),
       tap(entry => {
         // Not using TogglButton.updateCurrent as the time is not changed
         if (isRunningEntry) {
@@ -1212,12 +1219,6 @@ window.TogglButton = {
       baseUrl: TogglButton.$ApiUrl
     }).pipe(
       map(response => response.response),
-      switchMap(entry => {
-        if (timeEntry.metaFields) {
-          return TogglButton.updateTimeEntryMetaFields(entry.id, timeEntry.metaFields);
-        }
-        return of(entry);
-      }),
       tap(() => {
         if (TogglButton.$curEntry && TogglButton.$curEntry.id === timeEntryId) {
           TogglButton.$curEntry = null;
