@@ -46,7 +46,8 @@
     "notifications",
     "idle",
     "tabs",
-    "storage"
+    "storage",
+    "cookies"
   ],
   "optional_permissions": ["*://*/"],
   "externally_connectable": {

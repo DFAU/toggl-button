@@ -286,11 +286,6 @@ window.TogglButton = {
       }),
       switchMap(() => additionalDataObservable),
       map(() => {
-        browser.tabs.query({ active: true, currentWindow: true })
-          .then(filterTabs(function (tabs) {
-            browser.tabs.sendMessage(tabs[0].id, { type: 'sync' });
-          }));
-
         TogglButton.setBrowserActionBadge();
         TogglButton.updateBugsnag();
         TogglButton.handleQueue();
@@ -2149,7 +2144,7 @@ window.TogglButton = {
           TogglButton.logoutUser();
           resolve(undefined);
         } else if (request.type === 'sync') {
-          const res = TogglButton.fetchUser();
+          const res = await TogglButton.fetchUser();
           if (request.respond) {
             resolve(res);
           }
@@ -2492,6 +2487,18 @@ browser.windows.onCreated.addListener(function () {
   openWindowsCount++;
 });
 browser.windows.onRemoved.addListener(TogglButton.stopTrackingOnBrowserClosed);
+
+// fetch User when cookie was added (after Login)
+browser.cookies.onChanged.addListener(async function (changeInfo) {
+  if (changeInfo.cookie.domain === 'punch-in.dfau.de') {
+    if (changeInfo.cookie.domain === 'punch-in.dfau.de' && changeInfo.removed === false) {
+      if (process.env.DEBUG) {
+        console.info('Changed cookie: Execute sync');
+      }
+      await TogglButton.fetchUser();
+    }
+  }
+});
 
 window.onbeforeunload = function () {
   db.get('stopAutomatically')
