@@ -9,8 +9,8 @@ import Sound from './lib/sound';
 import togglButtonSVG from '!!raw-loader!./icons/toggl-button.svg';
 import find from 'lodash.find';
 import { ajax } from 'rxjs/ajax';
-import { catchError, map, switchMap, take, tap } from 'rxjs/operators';
-import { EMPTY, forkJoin, of } from 'rxjs';
+import { filter, catchError, map, switchMap, take, tap } from 'rxjs/operators';
+import { EMPTY, forkJoin, interval, of } from 'rxjs';
 
 const _ = {
   find
@@ -403,6 +403,29 @@ window.TogglButton = {
 
         TogglButton.$user.time_entries = timeEntries;
         TogglButton.updateTriggers(entry);
+      })
+    );
+  },
+
+  /**
+   * @return {Observable<any>}
+   */
+  executePingRequest: function () {
+    if (process.env.DEBUG) {
+      console.info(`Heartbeat: Execute ping request  ...`);
+    }
+    bugsnagClient.leaveBreadcrumb('Execute ping request');
+    return TogglButton.rxAjax('/ping', {
+      baseUrl: TogglButton.$ApiUrl
+    }).pipe(
+      catchError(() => {
+        TogglButton.$user = null;
+        TogglButton.setBrowserActionBadge();
+        return of({
+          success: false,
+          type: 'ping',
+          error: 'Connectivity error'
+        });
       })
     );
   },
@@ -2499,6 +2522,12 @@ browser.cookies.onChanged.addListener(async function (changeInfo) {
     }
   }
 });
+
+// Execute ping request to extend session
+interval(30 * 60 * 1000).pipe(
+  filter(() => TogglButton.$user),
+  switchMap(() => TogglButton.executePingRequest())
+).subscribe();
 
 window.onbeforeunload = function () {
   db.get('stopAutomatically')
