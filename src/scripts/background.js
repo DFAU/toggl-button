@@ -324,18 +324,6 @@ window.TogglButton = {
             // workaround due to missing workspaces
             project.wid = 0;
             project.combinedName = project.parentTitle + ' ' + project.name;
-
-            // todo: remove when https://code.dfau.de/dfau/kimai2-plugin/pulls/2 is deployed
-            project.metaFields = [
-              {
-                'name': 'dfau-support-org-name',
-                'value': project.parentTitle
-              },
-              {
-                'name': 'dfau-devboard-name',
-                'value': project.combinedName
-              }
-            ];
             projectMap[project.name + project.id] = project;
           }
         });
