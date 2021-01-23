@@ -704,7 +704,7 @@ window.TogglButton = {
         return of(entry);
       }),
       tap(entry => {
-        TogglButton.entry = entry;
+        TogglButton.localEntry = entry;
         TogglButton.updateTriggers(entry);
         db.bumpTrackedCount();
       }),
