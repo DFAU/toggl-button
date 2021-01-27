@@ -172,7 +172,6 @@ export default class Db {
   /**
    * Sets the default task for a given scope
    * @param {number} tid The task id
-   * If null, then set global default
    */
   setDefaultTask (tid) {
     const userId = this.togglButton.$user.id;
@@ -180,9 +179,8 @@ export default class Db {
   }
 
   /**
-   * Gets the default project for a given scope
-   * @param {string=} scope If null, then get global default
-   * @returns {number} The default project for the given scope
+   * Gets the default task
+   * @returns {number} The default task
    */
   async getDefaultTask () {
     if (!this.togglButton.$user) {

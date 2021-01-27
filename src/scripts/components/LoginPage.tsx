@@ -184,11 +184,6 @@ function HeaderLinks ({ loggedIn }: Pick<LoginState, 'loggedIn'>) {
           Account
         </Link>
       </li>
-      <li>
-        <Link href="https://support.punch-in.dfau.de/browser-extensions">
-          User Guide
-        </Link>
-      </li>
     </Links>
   );
 }

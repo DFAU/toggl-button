@@ -1,14 +1,39 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<svg height="23pt" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" width="23pt" version="1.1" viewBox="0,0,23,23">
-<title>Toggl Button</title>
-<defs/>
-<g opacity="1">
-<!-- 
-    WARNING!
-    Make sure that the "path" elements have the correct classes
-    so that the specific paths can be selected reliably.
--->
-<path class="play-icon" d="M3+11.5C3+6.80558+6.80558+3+11.5+3C16.1944+3+20+6.80558+20+11.5C20+16.1944+16.1944+20+11.5+20C6.80558+20+3+16.1944+3+11.5Z" opacity="1" fill="black"/>
-<path class="background-circle" d="M11.1+17C8.1+17+5.7+14.5+5.7+11.5C5.7+9+7.4+6.9+9.7+6.3L9.7+7.9C8.2+8.4+7.2+9.9+7.2+11.5C7.2+13.7+8.9+15.5+11.1+15.5C13.3+15.5+15.1+13.7+15.1+11.5C15.1+9.9+14+8.4+12.6+7.9L12.6+6.3C14.9+6.9+16.6+9+16.6+11.5C16.6+14.5+14.1+17+11.1+17L11.1+17ZM10.3+4.5L11.9+4.5L11.9+12.2L10.3+12.2L10.3+4.5ZM11.1+0.1C5+0.1+0+5.1+0+11.3C0+17.4+5+22.4+11.1+22.4C17.3+22.4+22.2+17.4+22.2+11.3C22.2+5.1+17.3+0.1+11.1+0.1L11.1+0.1Z" opacity="1" fill="#DD6FD1"/>
-</g>
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1112 1112">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #c675b0;
+      }
+
+      .cls-2 {
+        fill: #412a4c;
+      }
+    </style>
+  </defs>
+  <title>doggl_logo_full</title>
+  <circle class="cls-1" cx="556" cy="556" r="556"/>
+  <g id="Dog">
+    <rect class="cls-2" x="278.2" y="280.42" width="111.12" height="55.56"/>
+    <rect class="cls-2" x="444.88" y="280.42" width="222.24" height="55.56"/>
+    <rect class="cls-2" x="722.68" y="280.42" width="111.12" height="55.56"/>
+    <rect class="cls-2" x="222.64" y="335.98" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="389.32" y="335.98" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="667.12" y="335.98" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="833.8" y="335.98" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="167.08" y="391.54" width="55.56" height="222.24"/>
+    <rect class="cls-2" x="889.36" y="391.54" width="55.56" height="222.24"/>
+    <polygon class="cls-2" points="833.8 558.22 833.8 613.78 778.24 613.78 778.24 724.9 722.68 724.9 722.68 447.1 778.24 447.1 778.24 558.22 833.8 558.22"/>
+    <rect class="cls-2" x="444.88" y="502.66" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="611.56" y="502.66" width="55.56" height="55.56"/>
+    <polygon class="cls-2" points="389.32 447.1 389.32 724.9 333.76 724.9 333.76 613.78 278.2 613.78 278.2 558.22 333.76 558.22 333.76 447.1 389.32 447.1"/>
+    <rect class="cls-2" x="222.64" y="613.78" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="833.8" y="613.78" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="500.44" y="669.34" width="111.12" height="55.56"/>
+    <rect class="cls-2" x="389.32" y="724.9" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="667.12" y="724.9" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="444.88" y="780.46" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="611.56" y="780.46" width="55.56" height="55.56"/>
+    <rect class="cls-2" x="500.44" y="836.02" width="111.12" height="55.56"/>
+  </g>
 </svg>

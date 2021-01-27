@@ -1,10 +1,10 @@
 {
-  "name": "DFAU Track: Productivity & Time Tracker",
-  "short_name": "DFAU Track",
+  "name": "Doggl: DFAU Productivity & Time Tracker",
+  "short_name": "Doggl",
   "minimum_chrome_version": "63",
   "manifest_version": 2,
   "description":
-    "Puts a timer into any web tool and allows quick real time productivity tracking with all the data stored on your Toggl account",
+    "Puts a timer into any web tool and allows quick real time productivity tracking with all the data stored on your Doggl account",
   "background": {
     "scripts": [
       "scripts/background.js"
@@ -16,7 +16,7 @@
       "38": "images/inactive-38.png"
     },
     "default_popup": "html/popup.html",
-    "default_title": "Toggl Time Tracker"
+    "default_title": "Doggl Time Tracker"
   },
   "commands": {
     "quick-start-stop-entry": {
