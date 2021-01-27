@@ -130,11 +130,11 @@ module.exports = config(({ development, bugsnagApiKey, production, release, vers
           archive: [
             {
               source: 'dist/chrome',
-              destination: `dist/toggl-button-chrome-${version}.zip`
+              destination: `dist/doggl-button-chrome-${version}.zip`
             },
             {
               source: 'dist/firefox',
-              destination: `dist/toggl-button-firefox-${version}.zip`
+              destination: `dist/doggl-button-firefox-${version}.zip`
             }
           ]
         }

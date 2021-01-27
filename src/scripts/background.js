@@ -1070,10 +1070,7 @@ window.TogglButton = {
   pomodoroStopTimeTracking: async function () {
     const pomodoroStopTimeTrackingWhenTimerEnds = await db.get('pomodoroStopTimeTrackingWhenTimerEnds');
     if (pomodoroStopTimeTrackingWhenTimerEnds) {
-      TogglButton.stopTimeEntryPomodoro({
-        type: 'pomodoro-stop',
-        service: 'dropdown'
-      });
+      TogglButton.stopTimeEntry();
     } else {
       TogglButton.resetPomodoroProgress(TogglButton.$curEntry);
     }
@@ -1854,18 +1851,15 @@ window.TogglButton = {
       }
     } else if (notificationId === 'pomodoro-time-is-up') {
       if (buttonID === 0) {
-        timeEntry = TogglButton.$latestStoppedEntry;
-        if (timeEntry) {
-          timeEntry.type = 'timeEntry';
-          timeEntry.service = type;
-        } else {
-          timeEntry = { type: 'timeEntry', service: type };
-        }
-        // continue timer
-        TogglButton.createTimeEntry(timeEntry, null);
+        // stop timer
+        TogglButton.stopTimeEntry();
       } else {
+        timeEntry = TogglButton.$latestStoppedEntry;
+        timeEntry.type = 'timeEntry';
+        timeEntry.service = type;
+
         // start timer
-        TogglButton.createTimeEntry({ type: 'timeEntry', service: type }, null);
+        TogglButton.createTimeEntry(timeEntry, null);
       }
     } else if (notificationId === 'workday-ended-notification') {
       if (buttonID === 0) {

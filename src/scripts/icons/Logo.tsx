@@ -1,8 +1,72 @@
-import logoSVG from '!!raw-loader!./doggl_logo_full.svg';
+import * as React from 'react';
 
 export default function Logo () {
+  const style = {
+    fill: '#c675b0'
+  };
+
   return (
-    logoSVG
+    <svg height="25px" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2057.81 611.16" style={style}>
+      <title>doggl_logo_full</title>
+      <g>
+        <g id="Dog">
+          <rect x="111.12" width="111.12" height="55.56"/>
+          <rect x="277.8" width="222.24" height="55.56"/>
+          <rect x="555.6" width="111.12" height="55.56"/>
+          <rect x="55.56" y="55.56" width="55.56" height="55.56"/>
+          <rect x="222.24" y="55.56" width="55.56" height="55.56"/>
+          <rect x="500.04" y="55.56" width="55.56" height="55.56"/>
+          <rect x="666.72" y="55.56" width="55.56" height="55.56"/>
+          <rect y="111.12" width="55.56" height="222.24"/>
+          <rect x="722.28" y="111.12" width="55.56" height="222.24"/>
+          <polygon
+                   points="666.72 277.8 666.72 333.36 611.16 333.36 611.16 444.48 555.6 444.48 555.6 166.68 611.16 166.68 611.16 277.8 666.72 277.8"/>
+          <rect x="277.8" y="222.24" width="55.56" height="55.56"/>
+          <rect x="444.48" y="222.24" width="55.56" height="55.56"/>
+          <polygon
+                   points="222.24 166.68 222.24 444.48 166.68 444.48 166.68 333.36 111.12 333.36 111.12 277.8 166.68 277.8 166.68 166.68 222.24 166.68"/>
+          <rect x="55.56" y="333.36" width="55.56" height="55.56"/>
+          <rect x="666.72" y="333.36" width="55.56" height="55.56"/>
+          <rect x="333.36" y="388.92" width="111.12" height="55.56"/>
+          <rect x="222.24" y="444.48" width="55.56" height="55.56"/>
+          <rect x="500.04" y="444.48" width="55.56" height="55.56"/>
+          <rect x="277.8" y="500.04" width="55.56" height="55.56"/>
+          <rect x="444.48" y="500.04" width="55.56" height="55.56"/>
+          <rect x="333.36" y="555.6" width="111.12" height="55.56"/>
+        </g>
+        <g id="Doggl">
+          <g id="D">
+            <polygon
+                     points="1113.29 55.56 1113.29 444.48 946.61 444.48 946.61 388.92 1057.73 388.92 1057.73 222.24 946.61 222.24 946.61 166.68 1057.73 166.68 1057.73 55.56 1113.29 55.56"/>
+            <rect x="891.05" y="222.24" width="55.56" height="166.68"/>
+          </g>
+          <g id="o">
+            <rect x="1224.41" y="166.68" width="111.12" height="55.56"/>
+            <rect x="1168.85" y="222.24" width="55.56" height="166.68"/>
+            <rect x="1335.53" y="222.24" width="55.56" height="166.68"/>
+            <rect x="1224.41" y="388.92" width="111.12" height="55.56"/>
+          </g>
+          <g id="l">
+            <rect x="2002.25" y="55.56" width="55.56" height="388.92"/>
+          </g>
+          <g id="g">
+            <rect x="1502.21" y="166.68" width="111.12" height="55.56"/>
+            <rect x="1446.65" y="222.24" width="55.56" height="166.68"/>
+            <polygon
+                     points="1668.89 222.24 1668.89 500.04 1613.33 500.04 1613.33 444.48 1502.21 444.48 1502.21 388.92 1613.33 388.92 1613.33 222.24 1668.89 222.24"/>
+            <rect x="1502.21" y="500.04" width="111.12" height="55.56"/>
+          </g>
+          <g id="g-2" data-name="g">
+            <rect x="1780.01" y="166.68" width="111.12" height="55.56"/>
+            <rect x="1724.45" y="222.24" width="55.56" height="166.68"/>
+            <polygon
+                     points="1946.69 222.24 1946.69 500.04 1891.13 500.04 1891.13 444.48 1780.01 444.48 1780.01 388.92 1891.13 388.92 1891.13 222.24 1946.69 222.24"/>
+            <rect x="1780.01" y="500.04" width="111.12" height="55.56"/>
+          </g>
+        </g>
+      </g>
+    </svg>
+
   )
 
 }
