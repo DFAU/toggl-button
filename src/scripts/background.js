@@ -1190,7 +1190,7 @@ window.TogglButton = {
           TogglButton.setBrowserAction(entry);
         } else {
           const idx = TogglButton.$user.time_entries.findIndex(t => t.id === timeEntry.id);
-          if (idx) {
+          if (undefined !== idx) {
             TogglButton.$user.time_entries[idx] = entry;
           }
         }
