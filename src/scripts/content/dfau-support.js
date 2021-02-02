@@ -16,6 +16,18 @@ togglbutton.render(
     });
     // Append the button to the ticket controls
     appendTogglLinkAsButton(togglLink, $container);
+
+    const $scrollContainer = $('.scrollPageHeader');
+    const scrollTogglLink = togglbutton.createTimerLink({
+      className: 'zammad-toggle-btn',
+      description: descriptionSelector,
+      projectPredicate: projectPredicate,
+      tags: tagsSelector,
+      buttonType: 'minimal'
+    });
+
+    // Append the button to  scroll controls
+    appendTogglLinkAsButton(scrollTogglLink, $scrollContainer);
   }
 );
 
