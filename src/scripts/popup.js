@@ -447,7 +447,7 @@ const Popup = {
     }
     request.metaFields = [
       {
-        name: 'kimai2_plugin',
+        name: 'reference_url',
         value: this.$editView.querySelector('.toggl-button-card').value
       }
     ];
@@ -653,7 +653,7 @@ const Popup = {
         tags: PopUp.$newTagAutocomplete.getSelected(),
         metaFields: [
           {
-            name: 'kimai2_plugin',
+            name: 'reference_url',
             value: this.$newView.querySelector('.toggl-button-card').value
           }
         ]

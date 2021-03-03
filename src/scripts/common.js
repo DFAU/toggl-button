@@ -784,7 +784,7 @@ window.togglbutton = {
         activity: selectedTask.tid,
         metaFields: [
           {
-            name: 'kimai2_plugin',
+            name: 'reference_url',
             value: $('.toggl-button-card').value
           }
         ],
